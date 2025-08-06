@@ -1,22 +1,27 @@
-# <div align="center"> ⚡ SCéAL.AI: Momentum Tracker Agent ⚡</div>
+# <div align="center"> ⚡ Unmilaankr: Momentum Tracker Agent ⚡</div>
+
+<h3 align="center"><i>Tass uṇnayaṁ, vaḍḍhaiṁ, paṇṇattiṁ</i></h3>
+<h3 align="center"><i>Where Signals Grow. Builders Emerge.</i></h3>
+
 <h1 align="center">
-  <img width=400 height=400 src="https://github.com/user-attachments/assets/f50d80e8-b0e9-46cb-ae1f-e8b949949287" />
+   <img width="1536" height="1024" alt="unmil_bg" src="https://github.com/user-attachments/assets/7eb8d9b9-9eda-4249-989b-725c7a113fa0" />
 </h1>
 
-**SCéAL.AI** is an AI-powered analytics engine that monitors project activity across multiple channels — **GitHub**, **Twitter**, **Onchain**, and **Community (Discord)** — and distills it into real-time momentum scores, anomaly alerts, and AI-generated insights.
 
-> Built for founders, investors, analysts, and ecosystem explorers who want to track Web3 project activity and signals in one unified intelligence dashboard.
+**Unmilaankr** is a real-time signal engine that tracks project activity across multiple dimensions — **GitHub**, **Socials**, **Onchain**, and **Community** — to generate federated momentum scores, trend breakdowns, and AI-powered insights using **RAG pipelines**.
+
+> Built for builders, researchers, and Web3 explorers who seek early signals, actionable data, and project health intelligence.
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-- 🧠 **AI Insights** from GitHub, Onchain, and Discord data via **Groq + LLaMA**
-- 📊 **Momentum Scoring** across GitHub, Twitter, Onchain, and Community streams
-- 🔎 **Anomaly Detection** & time-series trend analysis
-- 💡 **Insights Dashboard** with breakdown cards, sparkline visualizations, and highlights
-- 🔌 **Modular Fetchers** with real APIs (GitHub, Etherscan, Uniswap, Discord)
-- 🧱 Built with **Next.js App Router**, **Groq SDK**, **Tailwind CSS**, and **Recharts**
+- 🧠 **AI Insights** across GitHub, Onchain, and Discord via **Groq + AI SDK**
+- 🧩 **Federated Momentum Scoring** across multiple project signal streams
+- 🔍 **Anomaly Detection** + trend shift monitoring with EMA models
+- 📊 **Insight Dashboard** with stacked area breakdowns and time-series charts
+- 🔌 **Real APIs & Scrapers** (GitHub, Etherscan, Uniswap, Nitter, Discord)
+- 🧱 Built with **Next.js App Router**, **TailwindCSS**, **Groq SDK**, and **Recharts**
 
 ---
 
@@ -44,8 +49,8 @@
 
 1. Clone the repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/momentum-tracker.git
-cd momentum-tracker
+git clone https://github.com/Shivansh-22866/unmilaankr.git
+cd unmilaankr
 ```
 
 2. Install the dependencies
@@ -109,7 +114,8 @@ Momentum Tracker uses:
 - DiscordDataFetcher – Reads server messages with bot token
 
 <h1 align="center">
-  <img src="https://github.com/user-attachments/assets/70e7988a-7700-4182-89b9-022e48f19ce0" widht=500 height=500 />
+  <img width="1000" height="550" alt="Screenshot_20250807_022418" src="https://github.com/user-attachments/assets/b57e43da-65d1-45ad-8c1b-77d545f2c4dd" />
+
 </h1>
 
 
@@ -182,4 +188,26 @@ This project would not be possible without the contributions and technology from
 - Particles.js
 - Gradient Hero Backgrounds
 
-## Built with ❤️ for the OnlyFounders AI Hackathon
+
+## 🔮 Future Additions
+📥 Wallet-based dashboards
+
+📲 Mobile-optimized dashboards
+
+🔌 Plugin system for new fetchers
+
+⛓️ Solana-native onchain indexer
+
+🔁 Gemini + LLaMA hybrid AI engine
+
+🔗 Farcaster feeds + influencer mapping
+
+## 🚀 Planned Roadmap (Late 2025 → Q3 2026)
+
+| Quarter	 |	Milestone	|
+| --- | --- |
+| Q4 2025	 |	Project rebrand, Solana deployment, Telegram integration |
+| Q1 2026	 |	Wallet-based dashboards, real-time alerts |
+| Q2 2026	 |	Plugin system for signal customizations |
+| Q3 2026	 | RAG-as-a-service, zkProof of Alignment |
+
