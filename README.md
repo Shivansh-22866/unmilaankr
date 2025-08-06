@@ -4,7 +4,7 @@
 <h3 align="center"><i>Where Signals Grow. Builders Emerge.</i></h3>
 
 <h1 align="center">
-   <img width="1536" height="1024" alt="unmil_bg" src="https://github.com/user-attachments/assets/7eb8d9b9-9eda-4249-989b-725c7a113fa0" />
+   <img width="1536" height="900" alt="unmil_bg" src="https://github.com/user-attachments/assets/7eb8d9b9-9eda-4249-989b-725c7a113fa0" />
 </h1>
 
 
@@ -24,6 +24,23 @@
 - 🧱 Built with **Next.js App Router**, **TailwindCSS**, **Groq SDK**, and **Recharts**
 
 ---
+
+---
+
+## 📄 Whitepaper
+| Section                 | Description                                                                                                                                                                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Vision & Philosophy** | Unmilaankr empowers builders, analysts, and researchers to detect signals early and evaluate community-backed innovation. Inspired by the Sanskrit–Prakrit term *Unmīla*, we believe great projects germinate silently — and deserve visibility. |
+| **Core Modules**        | Modular momentum agent system with GitHub, Discord, Onchain fetchers, federated scoring, anomaly detectors, and RAG (Retrieval-Augmented Generation) AI insight generation.                                                                      |
+| **Scoring Framework**   | Momentum scores are calculated using weighted time-series EMA models over activity vectors from multiple sources, including GitHub commits, token liquidity, and Discord message churn.                                                          |
+| **RAG-based Insights**  | Powered by Groq (LLaMA-3) and optionally Gemini Pro, our structured object responses highlight risk levels, key drivers, and actionable suggestions per stream.                                                                                  |
+| **Onchain Footprint**   | The system is Solana-native, with deployment pipelines planned for compressed NFTs, wallet-based dashboards, and token-triggered access.                                                                                                         |
+| **Token Utility**       | The native \$UNKR token will enable usage-tiered access, API credits, and insight personalization modules. Governance modules to follow.                                                                                                         |
+| **Roadmap**             | See below — includes Telegram integration, Farcaster signal ingestion, mobile dashboards, and RAG-as-a-service tooling.                                                                                                                          |
+
+🔗 [Read the Full Whitepaper](https://github.com/user-attachments/files/21636629/whitepaper_unmila.pdf)
+
+
 
 ## 🧱 Architecture Overview
 
