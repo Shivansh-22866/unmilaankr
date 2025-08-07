@@ -349,7 +349,7 @@ export default function LandingPage() {
       icon: <Rocket className="w-6 h-6" />,
       gradient: "from-cyan-400 to-blue-500",
       milestones: [
-        "Rebrand and redeploy as Unmilaankr",
+        "Rebrand and redeploy as Signiq",
         "Publish whitepaper + token strategy",
         "GitHub, Discord, Twitter, Farcaster integrations",
         "AI-powered Momentum Insights (via Google Gemini Pro)",
@@ -505,7 +505,7 @@ export default function LandingPage() {
             <Image src={Logo} alt="Logo" width={32} height={32} />
           </div>
           <span className="text-xl font-light tracking-wider text-cyan-100">
-            UNMILAANKR
+            Signiq
           </span>
         </div>
         <div className="hidden md:flex items-center space-x-12 text-sm font-light">
@@ -543,7 +543,81 @@ export default function LandingPage() {
       <section className="relative z-10 px-8 lg:px-16 pt-32 pb-40 overflow-hidden">
         {/* Hero Logo Mask - Only in Hero Section */}
 
+<div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {/* Central Whirlwind Effect */}
+          <div className="absolute top-[30%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            {/* Multiple rotating rings for whirlwind effect */}
+            <div className="relative w-[800px] h-[800px]">
+              {/* Outer whirlwind ring */}
+              <div className="absolute inset-0 rounded-full border-2 border-cyan-400/20 animate-spin" style={{ animationDuration: '20s' }}>
+                <div className="absolute top-0 left-1/2 w-4 h-4 bg-cyan-400/60 rounded-full transform -translate-x-1/2 -translate-y-2 blur-sm"></div>
+                <div className="absolute top-1/4 right-0 w-3 h-3 bg-purple-400/50 rounded-full transform translate-x-1 -translate-y-1/2 blur-sm"></div>
+                <div className="absolute bottom-1/4 left-0 w-2 h-2 bg-pink-400/40 rounded-full transform -translate-x-1 translate-y-1/2 blur-sm"></div>
+              </div>
 
+              {/* Middle whirlwind ring */}
+              <div className="absolute inset-20 rounded-full border-2 border-purple-400/25 animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }}>
+                <div className="absolute top-0 left-1/2 w-3 h-3 bg-purple-400/70 rounded-full transform -translate-x-1/2 -translate-y-1 blur-sm"></div>
+                <div className="absolute right-0 top-1/2 w-4 h-4 bg-cyan-400/50 rounded-full transform translate-x-2 -translate-y-1/2 blur-sm"></div>
+                <div className="absolute bottom-0 left-1/3 w-2 h-2 bg-pink-400/60 rounded-full transform translate-y-1 blur-sm"></div>
+              </div>
+
+              {/* Inner whirlwind ring */}
+              <div className="absolute inset-40 rounded-full border border-pink-400/30 animate-spin" style={{ animationDuration: '10s' }}>
+                <div className="absolute top-0 left-1/2 w-2 h-2 bg-pink-400/80 rounded-full transform -translate-x-1/2 blur-sm"></div>
+                <div className="absolute right-1/4 bottom-0 w-3 h-3 bg-cyan-400/60 rounded-full transform translate-y-1 blur-sm"></div>
+              </div>
+
+              {/* Central energy core */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <div className="w-16 h-16 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full animate-pulse blur-md opacity-40"></div>
+                <div className="absolute inset-2 w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse blur-sm opacity-60" style={{ animationDelay: '0.5s' }}></div>
+                <div className="absolute inset-4 w-8 h-8 bg-white/20 rounded-full animate-pulse opacity-80" style={{ animationDelay: '1s' }}></div>
+              </div>
+
+              {/* Swirling energy trails */}
+              <svg className="absolute inset-0 w-full h-full animate-spin pointer-events-none" style={{ animationDuration: '25s' }}>
+                <defs>
+                  <linearGradient id="trailGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="rgba(56, 189, 248, 0)" />
+                    <stop offset="50%" stopColor="rgba(56, 189, 248, 0.6)" />
+                    <stop offset="100%" stopColor="rgba(168, 85, 247, 0)" />
+                  </linearGradient>
+                  <linearGradient id="trailGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="rgba(168, 85, 247, 0)" />
+                    <stop offset="50%" stopColor="rgba(236, 72, 153, 0.6)" />
+                    <stop offset="100%" stopColor="rgba(56, 189, 248, 0)" />
+                  </linearGradient>
+                  <filter id="trailGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                    <feMerge>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+
+                {/* Spiral energy trails */}
+                <path
+                  d="M 400 200 Q 600 300, 400 400 Q 200 500, 400 600 Q 600 500, 400 400"
+                  fill="none"
+                  stroke="url(#trailGradient1)"
+                  strokeWidth="3"
+                  filter="url(#trailGlow)"
+                  opacity="0.7"
+                />
+                <path
+                  d="M 200 400 Q 300 200, 400 400 Q 500 600, 400 400 Q 300 200, 400 400"
+                  fill="none"
+                  stroke="url(#trailGradient2)"
+                  strokeWidth="2"
+                  filter="url(#trailGlow)"
+                  opacity="0.5"
+                />
+              </svg>
+            </div>
+          </div>
+          </div>
         <div className="max-w-7xl mx-auto relative z-10">
           <div
             className={`transition-all duration-2000 ${
@@ -567,7 +641,7 @@ export default function LandingPage() {
               </h1>
 
               <p className="text-lg lg:text-xl text-gray-300 mb-16 max-w-4xl mx-auto leading-relaxed font-light tracking-wide">
-                Unmilaankr provides federated momentum intelligence across
+                Signiq provides federated momentum intelligence across
                 GitHub, social media, onchain metrics, and community engagement.
                 Spot emerging projects early with AI-powered traction analysis.
               </p>
@@ -606,6 +680,7 @@ export default function LandingPage() {
                 <span>AI POWERED</span>
               </div>
             </div>
+
           </div>
         </div>
 
@@ -804,7 +879,7 @@ export default function LandingPage() {
               </span>
             </h2>
             <p className="text-lg text-gray-400 max-w-3xl mx-auto font-light tracking-wide">
-              See how Unmilaankr analyzes real-world projects with multi-modal
+              See how Signiq analyzes real-world projects with multi-modal
               signal intelligence
             </p>
           </div>
@@ -823,7 +898,7 @@ export default function LandingPage() {
 
                 <p className="text-gray-300 leading-relaxed font-light">
                   A decentralized social protocol with rising developer and user
-                  activity. Unmilaankr detected significant momentum across
+                  activity. Signiq detected significant momentum across
                   GitHub, Twitter, and onchain metrics.
                 </p>
 
@@ -1224,7 +1299,7 @@ export default function LandingPage() {
             </h2>
             <p className="text-lg text-gray-400 max-w-3xl mx-auto font-light tracking-wide">
               The native token powering incentives, governance, and access in
-              the Unmilaankr ecosystem
+              the Signiq ecosystem
             </p>
           </div>
 
@@ -1524,7 +1599,7 @@ export default function LandingPage() {
                   Deployment Strategy
                 </h3>
                 <p className="text-gray-300 leading-relaxed font-light">
-                  Unmilaankr targets a multi-stage deployment with progressive
+                  Signiq targets a multi-stage deployment with progressive
                   decentralization, launching first on the Solana ecosystem due
                   to its high throughput, low fees, and strong on-chain activity
                   signals.
@@ -1658,7 +1733,7 @@ export default function LandingPage() {
                     Investor Note
                   </h4>
                   <p className="text-gray-300 font-light leading-relaxed">
-                    Unmilaankr is positioned at the intersection of AI, Web3,
+                    Signiq is positioned at the intersection of AI, Web3,
                     and developer tooling—three rapidly growing markets. Our
                     federated architecture and multi-modal signal approach
                     creates a defensible moat with network effects that
@@ -2042,7 +2117,7 @@ export default function LandingPage() {
                 <Zap className="w-4 h-4 text-black" />
               </div>
               <span className="text-lg font-light tracking-wider text-cyan-100">
-                UNMILAANKR
+                Signiq
               </span>
             </div>
             <div className="flex items-center space-x-12 text-gray-500 text-xs font-light tracking-widest">
@@ -2058,7 +2133,7 @@ export default function LandingPage() {
               <a href="#" className="hover:text-cyan-300 transition-colors">
                 SUPPORT
               </a>
-              <span>© 2025 UNMILAANKR PROTOCOL</span>
+              <span>© 2025 Signiq PROTOCOL</span>
             </div>
           </div>
         </div>
