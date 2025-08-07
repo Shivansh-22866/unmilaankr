@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SCéAL.AI - Momentum Forecasting • Signal Intelligence • Federated Foresight",
-  description: "SCéAL.AI is an AI-powered analytics engine that monitors project activity across multiple channels.",
+  title: "Unmilaankr - Momentum Forecasting • Signal Intelligence • Federated Foresight",
+  description: "Unmilaankr is an AI-powered analytics engine that monitors project activity across multiple channels.",
 };
 
 export default function RootLayout({

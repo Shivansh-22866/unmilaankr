@@ -31,6 +31,8 @@ import {
   Wallet,
   Vote,
 } from "lucide-react";
+import Logo from "@/app/assets/images/logo.png"
+import Image from "next/image";
 
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState(false);
@@ -500,7 +502,7 @@ export default function LandingPage() {
       <nav className="relative z-50 flex items-center justify-between p-8 lg:px-16">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-lg flex items-center justify-center">
-            <Zap className="w-5 h-5 text-black" />
+            <Image src={Logo} alt="Logo" width={32} height={32} />
           </div>
           <span className="text-xl font-light tracking-wider text-cyan-100">
             UNMILAANKR
@@ -891,11 +893,11 @@ export default function LandingPage() {
                     AI Narrative
                   </h4>
                   <p className="text-gray-300 font-light leading-relaxed italic">
-                    "Farcaster shows breakout momentum across GitHub and onchain
+                    &quot;Farcaster shows breakout momentum across GitHub and onchain
                     signals. While Twitter sentiment remains positive, community
                     discord has slightly fragmented. AI flags early-stage
                     bullish consolidation with moderate long-term volatility
-                    risks."
+                    risks.&quot;
                   </p>
                 </div>
 
