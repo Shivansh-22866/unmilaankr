@@ -1,14 +1,13 @@
-# <div align="center"> ⚡ Unmilaankr: Momentum Tracker Agent ⚡</div>
+# <div align="center"> ⚡ Siqniq: Momentum Tracker Agent ⚡</div>
 
-<h3 align="center"><i>Tass uṇnayaṁ, vaḍḍhaiṁ, paṇṇattiṁ</i></h3>
 <h3 align="center"><i>Where Signals Grow. Builders Emerge.</i></h3>
 
 <h1 align="center">
-   <img width="1536" height="900" alt="unmil_bg" src="https://github.com/user-attachments/assets/7eb8d9b9-9eda-4249-989b-725c7a113fa0" />
+   <img width="1920" height="1080" alt="Signiq Intro" src="https://github.com/user-attachments/assets/2543d942-56dd-4406-ba22-9286834b528a" />
 </h1>
 
 
-**Unmilaankr** is a real-time signal engine that tracks project activity across multiple dimensions — **GitHub**, **Socials**, **Onchain**, and **Community** — to generate federated momentum scores, trend breakdowns, and AI-powered insights using **RAG pipelines**.
+**Siqniq** is a real-time signal engine that tracks project activity across multiple dimensions — **GitHub**, **Socials**, **Onchain**, and **Community** — to generate federated momentum scores, trend breakdowns, and AI-powered insights using **RAG pipelines**.
 
 > Built for builders, researchers, and Web3 explorers who seek early signals, actionable data, and project health intelligence.
 
