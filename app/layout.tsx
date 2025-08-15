@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Unmilaankr - Momentum Forecasting • Signal Intelligence • Federated Foresight",
-  description: "Unmilaankr is an AI-powered analytics engine that monitors project activity across multiple channels.",
+  title: "Signiq - Momentum Forecasting • Signal Intelligence • Federated Foresight",
+  description: "Signiq is an AI-powered analytics engine that monitors project activity across multiple channels.",
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased !bg-black/50`}
       >
         {children}
       </body>

@@ -31,8 +31,13 @@ import {
   Wallet,
   Vote,
 } from "lucide-react";
-import Logo from "@/app/assets/images/logo.png"
+import Logo from "@/app/assets/images/logo.png";
+import BuilderDashboard from "@/app/assets/images/builder-dashboard.png"
+import SignalRadar from "@/app/assets/images/signal-radar.png"
+import ProjectIntelligence from "@/app/assets/images/project-intelligence.png"
+import CommunityPulse from "@/app/assets/images/community-pulse.png"
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState(false);
@@ -42,126 +47,12 @@ export default function LandingPage() {
   const [activeRoadmapPhase, setActiveRoadmapPhase] = useState(0);
   const [activeTokenUtility, setActiveTokenUtility] = useState(0);
 
-  // Add particle system state and functions
-  const [particles, setParticles] = useState<
-    Array<{
-      x: number;
-      y: number;
-      size: number;
-      vx: number;
-      vy: number;
-      life: number;
-      color: string;
-    }>
-  >([]);
+  const router = useRouter()
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
 
-  useEffect(() => {
-    // Initialize particles
-    const initialParticles = Array.from({ length: 50 }, () => createParticle());
-    setParticles(initialParticles);
 
-    // Start animation
-    animationRef.current = requestAnimationFrame(animateParticles);
 
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, []);
-
-  const createParticle = () => {
-    const colors = [
-      "rgba(56, 189, 248, 0.6)",
-      "rgba(168, 85, 247, 0.6)",
-      "rgba(236, 72, 153, 0.6)",
-    ];
-    return {
-      x:
-        Math.random() *
-        (typeof window !== "undefined" ? window.innerWidth : 1000),
-      y:
-        Math.random() *
-        (typeof window !== "undefined" ? window.innerHeight : 1000),
-      size: Math.random() * 2 + 1,
-      vx: (Math.random() - 0.5) * 0.5,
-      vy: (Math.random() - 0.5) * 0.5,
-      life: Math.random() * 100 + 100,
-      color: colors[Math.floor(Math.random() * colors.length)],
-    };
-  };
-
-  const animateParticles = () => {
-    if (!canvasRef.current) {
-      animationRef.current = requestAnimationFrame(animateParticles);
-      return;
-    }
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-
-    if (!ctx) {
-      animationRef.current = requestAnimationFrame(animateParticles);
-      return;
-    }
-
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Update and draw particles
-    setParticles((prevParticles) => {
-      const updatedParticles = prevParticles.map((particle) => {
-        // Update position
-        const newX = particle.x + particle.vx;
-        const newY = particle.y + particle.vy;
-
-        // Decrease life
-        const newLife = particle.life - 1;
-
-        // If particle is dead, create a new one
-        if (newLife <= 0) {
-          return createParticle();
-        }
-
-        // Draw particle
-        ctx.beginPath();
-        ctx.arc(newX, newY, particle.size, 0, Math.PI * 2);
-        ctx.fillStyle = particle.color;
-        ctx.fill();
-
-        // Draw connections between nearby particles
-        prevParticles.forEach((otherParticle) => {
-          const dx = newX - otherParticle.x;
-          const dy = newY - otherParticle.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-
-          if (distance < 100) {
-            ctx.beginPath();
-            ctx.moveTo(newX, newY);
-            ctx.lineTo(otherParticle.x, otherParticle.y);
-            ctx.strokeStyle = `rgba(56, 189, 248, ${
-              0.1 * (1 - distance / 100)
-            })`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          }
-        });
-
-        return {
-          ...particle,
-          x: newX,
-          y: newY,
-          life: newLife,
-        };
-      });
-
-      return updatedParticles;
-    });
-
-    animationRef.current = requestAnimationFrame(animateParticles);
-  };
 
   // Update canvas size on window resize
   useEffect(() => {
@@ -299,7 +190,7 @@ export default function LandingPage() {
       title: "Builder Dashboard",
       description: "Comprehensive momentum intelligence for Web3 builders",
       image:
-        "/placeholder.svg?height=600&width=1000&text=Builder+Dashboard+Interface",
+        BuilderDashboard,
       features: [
         "Real-time momentum scoring",
         "Multi-modal signal analysis",
@@ -311,7 +202,7 @@ export default function LandingPage() {
       description:
         "Early traction detection across GitHub, social, and onchain",
       image:
-        "/placeholder.svg?height=600&width=1000&text=Signal+Radar+Analytics",
+        SignalRadar,
       features: [
         "Anomaly detection",
         "Trend forecasting",
@@ -322,7 +213,7 @@ export default function LandingPage() {
       title: "Project Intelligence",
       description: "Deep dive into project velocity and community momentum",
       image:
-        "/placeholder.svg?height=600&width=1000&text=Project+Intelligence+View",
+        ProjectIntelligence,
       features: [
         "Federated scoring",
         "Privacy-preserving analysis",
@@ -333,7 +224,7 @@ export default function LandingPage() {
       title: "Community Pulse",
       description: "Decentralized community engagement and sentiment tracking",
       image:
-        "/placeholder.svg?height=600&width=1000&text=Community+Pulse+Monitor",
+        CommunityPulse,
       features: [
         "Sentiment analysis",
         "Engagement patterns",
@@ -386,7 +277,7 @@ export default function LandingPage() {
       icon: <Network className="w-6 h-6" />,
       gradient: "from-amber-400 to-orange-500",
       milestones: [
-        "Decentralized RAG worker pool with $UMKR rewards",
+        "Decentralized RAG worker pool with $SGQ rewards",
         "Insight verification leaderboard (Staking-based)",
         "zkProof of Alignment: validate AI summaries",
         "Retroactive airdrop for contributors + liquidity launch",
@@ -398,14 +289,14 @@ export default function LandingPage() {
     {
       title: "Access Control",
       description:
-        "Access to premium dashboards, early project reports, and builder-specific analytics requires staking a minimum $UMKR threshold.",
+        "Access to premium dashboards, early project reports, and builder-specific analytics requires staking a minimum $SGQ threshold.",
       icon: <Key className="w-6 h-6" />,
       gradient: "from-cyan-400 to-blue-500",
     },
     {
       title: "Builder Incentives",
       description:
-        "Builders can earn $UMKR by submitting validated GitHub metadata or launching verified on-chain deployments.",
+        "Builders can earn $SGQ by submitting validated GitHub metadata or launching verified on-chain deployments.",
       icon: <Sparkles className="w-6 h-6" />,
       gradient: "from-purple-400 to-pink-500",
     },
@@ -533,7 +424,18 @@ export default function LandingPage() {
           >
             TOKENOMICS
           </a>
-          <Button className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-black font-medium px-6 py-2 text-sm tracking-wide">
+          <a
+            href="https://github.com/user-attachments/files/21636629/whitepaper_unmila.pdf"
+            className="text-gray-400 hover:text-cyan-300 transition-colors tracking-wide"
+          >
+            WHITEPAPER
+          </a>
+          <Button
+            onClick={() => {
+              router.push("/dashboard") 
+            }}
+            className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-black font-medium px-6 py-2 text-sm tracking-wide"
+          >
             LAUNCH BUILDER
           </Button>
         </div>
@@ -543,27 +445,39 @@ export default function LandingPage() {
       <section className="relative z-10 px-8 lg:px-16 pt-32 pb-40 overflow-hidden">
         {/* Hero Logo Mask - Only in Hero Section */}
 
-<div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {/* Central Whirlwind Effect */}
           <div className="absolute top-[30%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
             {/* Multiple rotating rings for whirlwind effect */}
             <div className="relative w-[800px] h-[800px]">
               {/* Outer whirlwind ring */}
-              <div className="absolute inset-0 rounded-full border-2 border-cyan-400/20 animate-spin" style={{ animationDuration: '20s' }}>
+              <div
+                className="absolute inset-0 rounded-full border-2 border-cyan-400/20 animate-spin"
+                style={{ animationDuration: "20s" }}
+              >
                 <div className="absolute top-0 left-1/2 w-4 h-4 bg-cyan-400/60 rounded-full transform -translate-x-1/2 -translate-y-2 blur-sm"></div>
                 <div className="absolute top-1/4 right-0 w-3 h-3 bg-purple-400/50 rounded-full transform translate-x-1 -translate-y-1/2 blur-sm"></div>
                 <div className="absolute bottom-1/4 left-0 w-2 h-2 bg-pink-400/40 rounded-full transform -translate-x-1 translate-y-1/2 blur-sm"></div>
               </div>
 
               {/* Middle whirlwind ring */}
-              <div className="absolute inset-20 rounded-full border-2 border-purple-400/25 animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }}>
+              <div
+                className="absolute inset-20 rounded-full border-2 border-purple-400/25 animate-spin"
+                style={{
+                  animationDuration: "15s",
+                  animationDirection: "reverse",
+                }}
+              >
                 <div className="absolute top-0 left-1/2 w-3 h-3 bg-purple-400/70 rounded-full transform -translate-x-1/2 -translate-y-1 blur-sm"></div>
                 <div className="absolute right-0 top-1/2 w-4 h-4 bg-cyan-400/50 rounded-full transform translate-x-2 -translate-y-1/2 blur-sm"></div>
                 <div className="absolute bottom-0 left-1/3 w-2 h-2 bg-pink-400/60 rounded-full transform translate-y-1 blur-sm"></div>
               </div>
 
               {/* Inner whirlwind ring */}
-              <div className="absolute inset-40 rounded-full border border-pink-400/30 animate-spin" style={{ animationDuration: '10s' }}>
+              <div
+                className="absolute inset-40 rounded-full border border-pink-400/30 animate-spin"
+                style={{ animationDuration: "10s" }}
+              >
                 <div className="absolute top-0 left-1/2 w-2 h-2 bg-pink-400/80 rounded-full transform -translate-x-1/2 blur-sm"></div>
                 <div className="absolute right-1/4 bottom-0 w-3 h-3 bg-cyan-400/60 rounded-full transform translate-y-1 blur-sm"></div>
               </div>
@@ -571,24 +485,51 @@ export default function LandingPage() {
               {/* Central energy core */}
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                 <div className="w-16 h-16 bg-gradient-to-r from-cyan-400 to-purple-400 rounded-full animate-pulse blur-md opacity-40"></div>
-                <div className="absolute inset-2 w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse blur-sm opacity-60" style={{ animationDelay: '0.5s' }}></div>
-                <div className="absolute inset-4 w-8 h-8 bg-white/20 rounded-full animate-pulse opacity-80" style={{ animationDelay: '1s' }}></div>
+                <div
+                  className="absolute inset-2 w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-pulse blur-sm opacity-60"
+                  style={{ animationDelay: "0.5s" }}
+                ></div>
+                <div
+                  className="absolute inset-4 w-8 h-8 bg-white/20 rounded-full animate-pulse opacity-80"
+                  style={{ animationDelay: "1s" }}
+                ></div>
               </div>
 
               {/* Swirling energy trails */}
-              <svg className="absolute inset-0 w-full h-full animate-spin pointer-events-none" style={{ animationDuration: '25s' }}>
+              <svg
+                className="absolute inset-0 w-full h-full animate-spin pointer-events-none"
+                style={{ animationDuration: "25s" }}
+              >
                 <defs>
-                  <linearGradient id="trailGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <linearGradient
+                    id="trailGradient1"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
                     <stop offset="0%" stopColor="rgba(56, 189, 248, 0)" />
                     <stop offset="50%" stopColor="rgba(56, 189, 248, 0.6)" />
                     <stop offset="100%" stopColor="rgba(168, 85, 247, 0)" />
                   </linearGradient>
-                  <linearGradient id="trailGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <linearGradient
+                    id="trailGradient2"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
                     <stop offset="0%" stopColor="rgba(168, 85, 247, 0)" />
                     <stop offset="50%" stopColor="rgba(236, 72, 153, 0.6)" />
                     <stop offset="100%" stopColor="rgba(56, 189, 248, 0)" />
                   </linearGradient>
-                  <filter id="trailGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <filter
+                    id="trailGlow"
+                    x="-50%"
+                    y="-50%"
+                    width="200%"
+                    height="200%"
+                  >
                     <feGaussianBlur stdDeviation="3" result="coloredBlur" />
                     <feMerge>
                       <feMergeNode in="coloredBlur" />
@@ -599,25 +540,21 @@ export default function LandingPage() {
 
                 {/* Spiral energy trails */}
                 <path
-                  d="M 400 200 Q 600 300, 400 400 Q 200 500, 400 600 Q 600 500, 400 400"
+                  d="M 400 400
+     C 350 300, 250 300, 250 400
+     C 250 500, 350 500, 400 400
+     C 450 300, 550 300, 550 400
+     C 550 500, 450 500, 400 400"
                   fill="none"
                   stroke="url(#trailGradient1)"
                   strokeWidth="3"
                   filter="url(#trailGlow)"
                   opacity="0.7"
                 />
-                <path
-                  d="M 200 400 Q 300 200, 400 400 Q 500 600, 400 400 Q 300 200, 400 400"
-                  fill="none"
-                  stroke="url(#trailGradient2)"
-                  strokeWidth="2"
-                  filter="url(#trailGlow)"
-                  opacity="0.5"
-                />
               </svg>
             </div>
           </div>
-          </div>
+        </div>
         <div className="max-w-7xl mx-auto relative z-10">
           <div
             className={`transition-all duration-2000 ${
@@ -627,7 +564,6 @@ export default function LandingPage() {
             }`}
           >
             <div className="text-center mb-16">
-
               <Badge className="mb-8 bg-cyan-500/10 text-cyan-300 border-cyan-500/20 px-6 py-2 text-sm font-light tracking-wider">
                 <Layers className="w-4 h-4 mr-2" />
                 DECENTRALIZED MOMENTUM INTELLIGENCE
@@ -641,13 +577,14 @@ export default function LandingPage() {
               </h1>
 
               <p className="text-lg lg:text-xl text-gray-300 mb-16 max-w-4xl mx-auto leading-relaxed font-light tracking-wide">
-                Signiq provides federated momentum intelligence across
-                GitHub, social media, onchain metrics, and community engagement.
-                Spot emerging projects early with AI-powered traction analysis.
+                Signiq provides federated momentum intelligence across GitHub,
+                social media, onchain metrics, and community engagement. Spot
+                emerging projects early with AI-powered traction analysis.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-8">
                 <Button
+                  onClick={() => router.push("/dashboard")}
                   size="lg"
                   className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-black border-0 px-12 py-4 text-base font-medium tracking-wider rounded-none"
                 >
@@ -680,7 +617,6 @@ export default function LandingPage() {
                 <span>AI POWERED</span>
               </div>
             </div>
-
           </div>
         </div>
 
@@ -823,12 +759,14 @@ export default function LandingPage() {
                 <div className="lg:w-1/2">
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-none blur-xl"></div>
-                    <img
+                    <Image
                       src={
                         screenshots[currentScreenshot].image ||
                         "/placeholder.svg"
                       }
                       alt={screenshots[currentScreenshot].title}
+                      width={1000}
+                      height={800}
                       className="relative rounded-none shadow-2xl border border-gray-700/50 w-full"
                     />
                   </div>
@@ -849,9 +787,11 @@ export default function LandingPage() {
                   }`}
                 >
                   <div className="relative overflow-hidden rounded-none">
-                    <img
+                    <Image
                       src={screenshot.image || "/placeholder.svg"}
                       alt={screenshot.title}
+                      width={1000}
+                      height={800}
                       className="w-full h-24 object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
@@ -898,8 +838,8 @@ export default function LandingPage() {
 
                 <p className="text-gray-300 leading-relaxed font-light">
                   A decentralized social protocol with rising developer and user
-                  activity. Signiq detected significant momentum across
-                  GitHub, Twitter, and onchain metrics.
+                  activity. Signiq detected significant momentum across GitHub,
+                  Twitter, and onchain metrics.
                 </p>
 
                 <div className="space-y-6">
@@ -968,11 +908,11 @@ export default function LandingPage() {
                     AI Narrative
                   </h4>
                   <p className="text-gray-300 font-light leading-relaxed italic">
-                    &quot;Farcaster shows breakout momentum across GitHub and onchain
-                    signals. While Twitter sentiment remains positive, community
-                    discord has slightly fragmented. AI flags early-stage
-                    bullish consolidation with moderate long-term volatility
-                    risks.&quot;
+                    &quot;Farcaster shows breakout momentum across GitHub and
+                    onchain signals. While Twitter sentiment remains positive,
+                    community discord has slightly fragmented. AI flags
+                    early-stage bullish consolidation with moderate long-term
+                    volatility risks.&quot;
                   </p>
                 </div>
 
@@ -1292,7 +1232,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-24">
             <h2 className="text-4xl lg:text-6xl font-extralight mb-8 tracking-tight">
-              <span className="text-white">$UMKR</span>
+              <span className="text-white">$SGQ</span>
               <span className="bg-gradient-to-r from-cyan-300 to-purple-300 bg-clip-text text-transparent ml-4">
                 TOKENOMICS
               </span>
@@ -1528,7 +1468,7 @@ export default function LandingPage() {
                       dominantBaseline="middle"
                       className="fill-white text-3xl font-light"
                     >
-                      $UMKR
+                      $SGQ
                     </text>
                   </svg>
                 </div>
@@ -1558,7 +1498,7 @@ export default function LandingPage() {
                 </h4>
                 <div className="space-y-4">
                   <p className="text-gray-400 font-light leading-relaxed">
-                    The $UMKR token is designed to create a balanced ecosystem
+                    The $SGQ token is designed to create a balanced ecosystem
                     where builders, validators, and signal contributors are
                     incentivized to participate in the network.
                   </p>
@@ -1733,8 +1673,8 @@ export default function LandingPage() {
                     Investor Note
                   </h4>
                   <p className="text-gray-300 font-light leading-relaxed">
-                    Signiq is positioned at the intersection of AI, Web3,
-                    and developer tooling—three rapidly growing markets. Our
+                    Signiq is positioned at the intersection of AI, Web3, and
+                    developer tooling—three rapidly growing markets. Our
                     federated architecture and multi-modal signal approach
                     creates a defensible moat with network effects that
                     strengthen as more builders join the ecosystem.

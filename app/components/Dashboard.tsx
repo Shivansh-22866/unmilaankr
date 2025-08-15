@@ -38,6 +38,8 @@ import type {
 import { MomentumTimeSeries } from "./MomentumTimeSeries";
 import { AIInsightsDisplay } from "./AIInsightsDisplay";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Logo from "@/app/assets/images/logo.png"
 
 export default function Dashboard() {
   const router = useRouter();
@@ -217,8 +219,9 @@ const normalizedWeights = {
                     }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 rounded-full blur-2xl opacity-50 animate-pulse" />
-                    <div className="relative p-6 bg-gradient-to-br from-cyan-500 via-purple-600 to-pink-600 rounded-full">
-                      <Brain className="h-16 w-16 text-white" />
+                    <div className="relative p-2 bg-gradient-to-br from-cyan-500 via-purple-600 to-pink-600 rounded-full">
+                      {/* <Brain className="h-16 w-16 text-white" /> */}
+                      <Image src={Logo} height={64} width={64} alt="Logo" />
                     </div>
                   </motion.div>
                 </div>
@@ -234,7 +237,7 @@ const normalizedWeights = {
                     ease: "linear",
                   }}
                 >
-                  SCéAL.AI
+                  Signiq
                 </motion.h1>
 
                 <motion.p
@@ -243,8 +246,7 @@ const normalizedWeights = {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5, duration: 1 }}
                 >
-                  “An té a bhíonn siúlach, bíonn scéalach” — In Web3, the signal
-                  travels far to bring the story home.
+                  Catch the Signal Before the Noise
                 </motion.p>
 
                 <motion.p
@@ -290,7 +292,7 @@ const normalizedWeights = {
             transition={{ delay: 0.3, duration: 0.8 }}
             className="mb-12"
           >
-            <Card className="bg-black/60 backdrop-blur-md border border-cyan-500/30 shadow-2xl overflow-hidden">
+            <Card className="!bg-black/50 backdrop-blur-md border border-cyan-500/30 shadow-2xl overflow-hidden">
               <motion.div
                 className="h-1 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400"
                 animate={{
@@ -330,7 +332,7 @@ const normalizedWeights = {
                     </Badge>
                     <Badge
                       variant="outline"
-                      className="border-cyan-500/50 text-cyan-400 bg-cyan-500/10 px-4 py-2"
+                      className="border-cyan-500/50 !text-cyan-400 bg-cyan-500/10 px-4 py-2"
                     >
                       <Activity className="h-4 w-4 mr-2" />
                       ACTIVE
@@ -590,7 +592,7 @@ const normalizedWeights = {
 
                       <div className="text-center">
                         <motion.p
-                          className="text-3xl font-bold text-cyan-400 font-mono mb-4"
+                          className="text-3xl font-bold text-cyan-400 font-mono mb-4 !bg-black/50"
                           animate={{ opacity: [1, 0.5, 1] }}
                           transition={{
                             duration: 1.5,
@@ -657,7 +659,7 @@ const normalizedWeights = {
                 className="space-y-12"
               >
                 {/* Holographic Score Display */}
-                <Card className="bg-black/80 backdrop-blur-md border border-cyan-500/30 shadow-2xl overflow-hidden">
+                <Card className="!bg-black/20 backdrop-blur-md border border-cyan-500/30 shadow-2xl overflow-hidden">
                   <motion.div
                     className="h-2 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400"
                     animate={{
@@ -714,7 +716,7 @@ const normalizedWeights = {
                           </Badge>
                           <Badge
                             variant="outline"
-                            className="text-lg px-6 py-3 border-cyan-500/50 text-cyan-400 bg-cyan-500/10 font-mono"
+                            className="text-lg px-6 py-3 border-cyan-500/50 !text-cyan-400 bg-cyan-500/10 font-mono"
                           >
                             {(score.confidence * 100).toFixed(0)}% CONFIDENCE
                           </Badge>
