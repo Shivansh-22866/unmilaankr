@@ -565,7 +565,7 @@ const normalizedWeights = {
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="mb-12"
               >
-                <Card className="bg-black/80 backdrop-blur-md border border-cyan-500/30 shadow-2xl">
+                <Card className="!bg-black/80 backdrop-blur-md border border-cyan-500/30 shadow-2xl">
                   <CardContent className="p-12">
                     <div className="flex flex-col items-center justify-center space-y-8">
                       <motion.div

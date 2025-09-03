@@ -39,7 +39,7 @@ Your response should include a JSON object with:
 
   try {
     const result = await generateObject({
-      model: groq('llama3-8b-8192'),
+      model: groq('llama-3.3-70b-versatile'),
       schema: githubInsightSchema,
       prompt,
     });

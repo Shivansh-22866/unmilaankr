@@ -31,7 +31,7 @@ export async function analyzeWithGroq(insights: string) {
   });
 
   const result = await generateObject({
-    model: groq('llama3-8b-8192'),
+    model: groq('llama-3.3-70b-versatile'),
     schema,
     prompt: `
 You are a Web3 intelligence analyst AI specialized in real-time signal processing. Given cross-domain input from GitHub, Twitter, Onchain data, community platforms, and anomalies, return the following structured fields:

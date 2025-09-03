@@ -110,7 +110,7 @@ export function AIInsightsDisplay({ insights, isProcessing }: EnhancedAIInsights
               {/* Narrative & Summary */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Narrative Card */}
-                <Card className="bg-black/60 backdrop-blur-md border border-cyan-500/30 shadow-2xl">
+                <Card className="!bg-black/60 backdrop-blur-md border border-cyan-500/30 shadow-2xl">
                   <CardHeader className="border-b border-cyan-500/20">
                     <CardTitle className="text-xl text-white font-mono flex items-center">
                       <BarChart3 className="h-5 w-5 mr-2 text-cyan-400" />
@@ -136,7 +136,7 @@ export function AIInsightsDisplay({ insights, isProcessing }: EnhancedAIInsights
                 </Card>
 
                 {/* Key Signals */}
-                <Card className="bg-black/60 backdrop-blur-md border border-green-500/30 shadow-2xl">
+                <Card className="!bg-black/60 backdrop-blur-md border border-green-500/30 shadow-2xl">
                   <CardHeader className="border-b border-green-500/20">
                     <CardTitle className="text-xl text-white font-mono flex items-center">
                       <Zap className="h-5 w-5 mr-2 text-green-400" />
@@ -165,7 +165,7 @@ export function AIInsightsDisplay({ insights, isProcessing }: EnhancedAIInsights
               {/* Side Panel - Quick Stats */}
               <div className="space-y-6">
                 {/* Brain Scan */}
-                <Card className="bg-black/60 backdrop-blur-md border border-cyan-500/30 shadow-2xl">
+                <Card className="!bg-black/60 backdrop-blur-md border border-cyan-500/30 shadow-2xl">
                   <CardHeader className="border-b border-cyan-500/20">
                     <CardTitle className="text-lg text-white font-mono flex items-center">
                       <Brain className="h-4 w-4 mr-2 text-cyan-400" />
@@ -180,7 +180,7 @@ export function AIInsightsDisplay({ insights, isProcessing }: EnhancedAIInsights
                 </Card>
 
                 {/* Outlook & Risk */}
-                <Card className="bg-black/60 backdrop-blur-md border border-yellow-500/30 shadow-2xl">
+                <Card className="!bg-black/60 backdrop-blur-md border border-yellow-500/30 shadow-2xl">
                   <CardHeader className="border-b border-yellow-500/20">
                     <CardTitle className="text-lg text-white font-mono flex items-center">
                       {getOutlookIcon()}
@@ -210,7 +210,7 @@ export function AIInsightsDisplay({ insights, isProcessing }: EnhancedAIInsights
             {/* Second Row - Advanced Analytics */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Signal Alignment */}
-              <Card className="bg-black/60 backdrop-blur-md border border-purple-500/30 shadow-2xl">
+              <Card className="!bg-black/60 backdrop-blur-md border border-purple-500/30 shadow-2xl">
                 <CardHeader className="border-b border-purple-500/20">
                   <CardTitle className="text-xl text-white font-mono flex items-center">
                     <Target className="h-5 w-5 mr-2 text-purple-400" />
@@ -248,7 +248,7 @@ export function AIInsightsDisplay({ insights, isProcessing }: EnhancedAIInsights
               </Card>
 
               {/* Trend Velocity */}
-              <Card className="bg-black/60 backdrop-blur-md border border-orange-500/30 shadow-2xl">
+              <Card className="!bg-black/60 backdrop-blur-md border border-orange-500/30 shadow-2xl">
                 <CardHeader className="border-b border-orange-500/20">
                   <CardTitle className="text-xl text-white font-mono flex items-center">
                     <Gauge className="h-5 w-5 mr-2 text-orange-400" />
@@ -270,7 +270,7 @@ export function AIInsightsDisplay({ insights, isProcessing }: EnhancedAIInsights
             {/* Third Row - Performance & Analysis */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Relative Performance */}
-              <Card className="bg-black/60 backdrop-blur-md border border-blue-500/30 shadow-2xl">
+              <Card className="!bg-black/60 backdrop-blur-md border border-blue-500/30 shadow-2xl">
                 <CardHeader className="border-b border-blue-500/20">
                   <CardTitle className="text-lg text-white font-mono flex items-center">
                     <Award className="h-4 w-4 mr-2 text-blue-400" />
@@ -306,7 +306,7 @@ export function AIInsightsDisplay({ insights, isProcessing }: EnhancedAIInsights
               </Card>
 
               {/* AI Reasoning */}
-              <Card className="lg:col-span-2 bg-black/60 backdrop-blur-md border border-purple-500/30 shadow-2xl">
+              <Card className="lg:col-span-2 !bg-black/60 backdrop-blur-md border border-purple-500/30 shadow-2xl">
                 <CardHeader className="border-b border-purple-500/20">
                   <CardTitle className="text-xl text-white font-mono flex items-center">
                     <Brain className="h-5 w-5 mr-2 text-purple-400" />
