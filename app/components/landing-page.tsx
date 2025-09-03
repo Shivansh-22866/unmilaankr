@@ -430,6 +430,12 @@ export default function LandingPage() {
           >
             WHITEPAPER
           </a>
+          <a
+            href="https://github.com/Shivansh-22866/unmilaankr"
+            className="text-gray-400 hover:text-cyan-300 transition-colors tracking-wide"
+          >
+            GITHUB
+          </a>
           <Button
             onClick={() => {
               router.push("/dashboard") 
