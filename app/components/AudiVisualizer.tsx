@@ -66,10 +66,10 @@ export function AudioVisualizer() {
   }, [isActive])
 
   return (
-    <div className="relative">
+    <div className="relative flex flex-col">
       <button
         onClick={() => setIsActive(!isActive)}
-        className="mb-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg font-mono text-sm hover:from-cyan-600 hover:to-purple-600 transition-all"
+        className="mb-4 px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg font-mono text-sm hover:from-cyan-600 hover:to-purple-600 transition-all mx-auto relative"
       >
         {isActive ? "DISABLE AUDIO VIZ" : "ENABLE AUDIO VIZ"}
       </button>

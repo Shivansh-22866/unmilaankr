@@ -669,7 +669,7 @@ export default function Dashboard() {
               transition={{ duration: 0.8 }}
               className="mb-16"
             >
-              <Card className="bg-black/40 backdrop-blur-sm border border-cyan-500/20">
+              <Card className="!bg-black/40 backdrop-blur-sm border border-cyan-500/20">
                 <CardContent className="p-16">
                   <div className="flex flex-col items-center justify-center space-y-8">
                     <motion.div
