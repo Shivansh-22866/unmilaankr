@@ -240,11 +240,10 @@ export default function LandingPage() {
       icon: <Rocket className="w-6 h-6" />,
       gradient: "from-cyan-400 to-blue-500",
       milestones: [
-        "Rebrand and redeploy as Signiq",
+        "Deploy Signiq",
         "Publish whitepaper + token strategy",
         "GitHub, Discord, Twitter, Farcaster integrations",
-        "AI-powered Momentum Insights (via Google Gemini Pro)",
-        "Virtuals Launch + DAO Onboarding",
+        "AI-powered Momentum Insights",
       ],
     },
     {
