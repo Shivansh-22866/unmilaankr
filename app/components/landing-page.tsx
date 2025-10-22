@@ -2084,16 +2084,16 @@ const roadmapPhases = [
               </span>
             </div>
             <div className="flex items-center space-x-12 text-gray-500 text-xs font-light tracking-widest">
-              <a href="#" className="hover:text-cyan-300 transition-colors">
+              <a href="/whitepaper_unmila.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-300 transition-colors">
                 WHITEPAPER
               </a>
-              <a href="#" className="hover:text-cyan-300 transition-colors">
+              {/* <a href="#" className="hover:text-cyan-300 transition-colors">
                 PRIVACY
               </a>
               <a href="#" className="hover:text-cyan-300 transition-colors">
                 BUILDER API
-              </a>
-              <a href="#" className="hover:text-cyan-300 transition-colors">
+              </a> */}
+              <a href="https://t.me/+PS9zZXA8MqFiOGI9" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-300 transition-colors">
                 SUPPORT
               </a>
               <span>© 2025 Signiq PROTOCOL</span>
