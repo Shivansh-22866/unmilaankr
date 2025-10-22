@@ -459,7 +459,7 @@ const roadmapPhases = [
             }}
             className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-black font-medium px-6 py-2 text-sm tracking-wide"
           >
-            LAUNCH BUILDER
+            LAUNCH DASHBOARD
           </Button>
         </div>
       </nav>
@@ -611,13 +611,14 @@ const roadmapPhases = [
                   size="lg"
                   className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-black border-0 px-12 py-4 text-base font-medium tracking-wider rounded-none"
                 >
-                  START BUILDING
+                  START ANALYSIS
                   <ArrowRight className="w-5 h-5 ml-3" />
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
                   className="border-gray-600 text-gray-300 hover:bg-gray-900 hover:border-cyan-500 px-12 py-4 text-base rounded-none bg-transparent font-light tracking-wider"
+                  onClick={() => router.replace("/demo.mp4")}
                 >
                   <Eye className="w-5 h-5 mr-3" />
                   VIEW DEMO
@@ -2059,7 +2060,7 @@ const roadmapPhases = [
                 {/* Button glow effect */}
                 <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-cyan-300/20 to-purple-300/20 transform translate-y-full group-hover:translate-y-0 transition-transform duration-500"></span>
                 <Zap className="w-5 h-5 mr-3 relative z-10" />
-                <span className="relative z-10">LAUNCH BUILDER</span>
+                <a href="/dashboard" className="relative z-10">LAUNCH DASHBOARD</a>
                 <ArrowRight className="w-5 h-5 ml-3 relative z-10" />
               </Button>
               <div className="flex items-center space-x-3 text-gray-500 text-sm font-light tracking-wide">
