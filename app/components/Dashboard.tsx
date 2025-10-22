@@ -78,13 +78,13 @@ export default function Dashboard() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [projectConfig, setProjectConfig] = useState<ProjectConfig>({
     name: "Lens Protocol",
-    githubRepo: "https://github.com/RocketChat/Rocket.Chat",
-    twitterHandle: "isShivmkwr",
-    contractAddress: "0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9",
+    githubRepo: "",
+    twitterHandle: "",
+    contractAddress: "",
     tokenSymbol: "LENS",
     discord: {
-      serverId: "1381348107551379557",
-      channelId: "1381348108453286063",
+      serverId: "",
+      channelId: "",
     },
   })
 
