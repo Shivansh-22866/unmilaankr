@@ -440,7 +440,7 @@ const roadmapPhases = [
             TOKENOMICS
           </a>
           <a
-            href="https://github.com/user-attachments/files/21636629/whitepaper_unmila.pdf"
+            href="/whitepaper_unmila.pdf"
             className="text-gray-400 hover:text-cyan-300 transition-colors tracking-wide"
           >
             WHITEPAPER
