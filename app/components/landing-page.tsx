@@ -233,56 +233,72 @@ export default function LandingPage() {
     },
   ];
 
-  const roadmapPhases = [
-    {
-      quarter: "Q4 2025",
-      title: "Genesis",
-      icon: <Rocket className="w-6 h-6" />,
-      gradient: "from-cyan-400 to-blue-500",
-      milestones: [
-        "Deploy Signiq",
-        "Publish whitepaper + token strategy",
-        "GitHub, Discord, Twitter, Farcaster integrations",
-        "AI-powered Momentum Insights",
-      ],
-    },
-    {
-      quarter: "Q1 2026",
-      title: "Builderverse",
-      icon: <Code className="w-6 h-6" />,
-      gradient: "from-purple-400 to-pink-500",
-      milestones: [
-        "Launch Builder Dashboard with GitHub-linked identity",
-        "Dev Spotlight: On-chain contributor leaderboard",
-        "Momentum-as-a-Service (MaaS) for partner communities",
-        "Beta: Signal Plugins (RAG extensions, z-scorer modules)",
-      ],
-    },
-    {
-      quarter: "Q2 2026",
-      title: "Proof of Signal",
-      icon: <Shield className="w-6 h-6" />,
-      gradient: "from-emerald-400 to-teal-500",
-      milestones: [
-        "Anchor verifiable signal hashes on Solana",
-        "TEE-based privacy zones for stealth project mode",
-        "Anomaly Challenge Protocol: crowd-dispute prediction",
-        "Token-gated Launch Readiness Score for projects",
-      ],
-    },
-    {
-      quarter: "Q3 2026",
-      title: "RAGNet DAO",
-      icon: <Network className="w-6 h-6" />,
-      gradient: "from-amber-400 to-orange-500",
-      milestones: [
-        "Decentralized RAG worker pool with $SGQ rewards",
-        "Insight verification leaderboard (Staking-based)",
-        "zkProof of Alignment: validate AI summaries",
-        "Retroactive airdrop for contributors + liquidity launch",
-      ],
-    },
-  ];
+const roadmapPhases = [
+  {
+    quarter: "Q4 2025",
+    title: "Genesis",
+    icon: <Rocket className="w-6 h-6" />,
+    gradient: "from-cyan-400 to-blue-500",
+    milestones: [
+      "Deploy Signiq Alpha on Solana",
+      "Launch token: $SGQ with whitepaper + utility doc",
+      "Integrate GitHub, Discord, Twitter, Farcaster data",
+      "AI Momentum Scoring with Groq-powered summaries",
+      "500+ $SGQ token holders",
+      "Early access leaderboard for alpha trader signals"
+    ],
+  },
+  {
+    quarter: "Q1 2026",
+    title: "Builderverse",
+    icon: <Code className="w-6 h-6" />,
+    gradient: "from-purple-400 to-pink-500",
+    milestones: [
+      "Launch Builder Dashboard with GitHub-linked identity",
+      "Momentum Embeds: plug-and-play scorecard for builders",
+      "Dev Spotlight & GitHub reputation index",
+      "Momentum-as-a-Service API for community use",
+      "Browser Extension Beta: score any project instantly",
+      "10,000+ accounts using the Signiq dashboard",
+      "Custom alert builder for watchlist-based scoring",
+      "3,000+ browser extension installs",
+      "2,500+ builder dashboards created"
+    ],
+  },
+  {
+    quarter: "Q2 2026",
+    title: "Proof of Signal",
+    icon: <Shield className="w-6 h-6" />,
+    gradient: "from-emerald-400 to-teal-500",
+    milestones: [
+      "Solana anchoring of project signal proofs",
+      "Token-gated credibility scoring for upcoming launches",
+      "Anomaly Dispute Protocol for public challenges",
+      "Stealth Mode Zones with privacy-preserving analytics",
+      "$SGQ utility expansion for builders + analysts",
+      "Launch “Trader’s Hub” with AI signal feed + alerts",
+      "25,000+ active momentum queries/month"
+    ],
+  },
+  {
+    quarter: "Q3 2026",
+    title: "RAGNet DAO",
+    icon: <Network className="w-6 h-6" />,
+    gradient: "from-amber-400 to-orange-500",
+    milestones: [
+      "Launch RAGNet: decentralized insight verification layer",
+      "Staked analyst leaderboard & signal verifier pool",
+      "zkProof of Alignment for AI-generated reports",
+      "Retroactive rewards: contributors + onchain LPs",
+      "DAO governance and treasury rollout for Signiq",
+      "100,000+ total users",
+      "5,000+ active signal verifiers and $SGQ stakers",
+      "Launch DAO-curated “Top Signals” channel",
+      "Integrate with leading Solana Launchpads & DeFi protocols"
+    ],
+  },
+];
+
 
   const tokenUtilities = [
     {

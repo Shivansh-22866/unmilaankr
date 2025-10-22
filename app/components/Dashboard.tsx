@@ -429,7 +429,7 @@ export default function Dashboard() {
                   />
                   <p className="text-xs text-gray-500 font-mono">
                     <a
-                      href="https://discord.com/oauth2/authorize?client_id=1381346538961506524"
+                      href="https://discord.com/oauth2/authorize?client_id=1381346538961506524&permissions=274877987840&integration_type=0&scope=bot+applications.commands"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-cyan-400 hover:text-cyan-300 underline"
