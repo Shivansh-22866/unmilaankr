@@ -441,6 +441,8 @@ const roadmapPhases = [
           </a>
           <a
             href="/whitepaper_unmila.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-gray-400 hover:text-cyan-300 transition-colors tracking-wide"
           >
             WHITEPAPER
