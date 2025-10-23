@@ -440,7 +440,7 @@ const roadmapPhases = [
             TOKENOMICS
           </a>
           <a
-            href="/whitepaper_unmila.pdf"
+            href="/whitepaper_signiq.pdf"
             target="_blank"
             rel="noopener noreferrer"
             className="text-gray-400 hover:text-cyan-300 transition-colors tracking-wide"
@@ -2085,7 +2085,7 @@ const roadmapPhases = [
               </span>
             </div>
             <div className="flex items-center space-x-12 text-gray-500 text-xs font-light tracking-widest">
-              <a href="/whitepaper_unmila.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-300 transition-colors">
+              <a href="/whitepaper_signiq.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-300 transition-colors">
                 WHITEPAPER
               </a>
               {/* <a href="#" className="hover:text-cyan-300 transition-colors">

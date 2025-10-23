@@ -37,7 +37,7 @@
 | **Token Utility**       | The native \$UNKR token will enable usage-tiered access, API credits, and insight personalization modules. Governance modules to follow.                                                                                                         |
 | **Roadmap**             | See below — includes Telegram integration, Farcaster signal ingestion, mobile dashboards, and RAG-as-a-service tooling.                                                                                                                          |
 
-🔗 [Read the Full Whitepaper](https://github.com/user-attachments/files/21636629/whitepaper_unmila.pdf)
+🔗 [Read the Full Whitepaper](/public/whitepaper_signiq.pdf)
 
 
 
