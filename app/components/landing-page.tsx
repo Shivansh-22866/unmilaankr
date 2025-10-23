@@ -453,6 +453,11 @@ const roadmapPhases = [
           >
             GITHUB
           </a>
+          <a
+            href="https://x.com/signiq"
+            className="text-gray-400 hover:text-cyan-300 transition-colors tracking-wide">
+            X
+          </a>
           <Button
             onClick={() => {
               router.push("/dashboard") 
