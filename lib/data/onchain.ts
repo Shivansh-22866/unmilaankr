@@ -342,6 +342,91 @@ export class SolanaDataFetcher {
     }
   }
 
+  public async getTokenInfo(mintAddress: string): Promise<{
+  name: string;
+  symbol: string;
+  decimals: number;
+  totalSupply: string;
+  priceUsd?: number;
+}> {
+  try {
+    console.log(`Fetching Solana token info for: ${mintAddress}`);
+    const info = await this.fetchTokenInfo(mintAddress);
+    if (!info) throw new Error("Token info not found");
+
+    // Enrich with price data from DexScreener
+    const dexData = await this.fetchDEXMetrics(mintAddress);
+    const priceUsd = dexData.pairs?.[0]?.price ?? 0;
+
+    return {
+      name: info.name,
+      symbol: info.symbol,
+      decimals: info.decimals,
+      totalSupply: info.supply,
+      priceUsd
+    };
+  } catch (error) {
+    console.error("Error fetching Solana token info:", error);
+    return {
+      name: "Unknown",
+      symbol: "UNKNOWN",
+      decimals: 0,
+      totalSupply: "0",
+      priceUsd: 0
+    };
+  }
+}
+
+
+  async fetchTopHolders(mintAddress: string, limit: number = 10): Promise<Array<{
+  address: string;
+  balance: string;
+  percentage: number;
+}>> {
+  try {
+    if (!this.heliusApiKey) {
+      console.warn('Helius API key not provided; topHolders unavailable for Solana');
+      return [];
+    }
+
+    const response = await axios.post(
+      `https://mainnet.helius-rpc.com/?api-key=${this.heliusApiKey}`,
+      {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "getTokenAccounts",
+        params: {
+          mint: mintAddress,
+          limit: limit * 5 // fetch extra to ensure non-zero balances
+        }
+      },
+      { timeout: 10000 }
+    );
+
+    const accounts = response.data?.result?.token_accounts || [];
+    const nonZeroAccounts = accounts.filter((a: any) => parseFloat(a.amount) > 0);
+
+    if (nonZeroAccounts.length === 0) return [];
+
+    const total = nonZeroAccounts.reduce((sum: number, a: any) => sum + parseFloat(a.amount), 0);
+    const sorted = nonZeroAccounts
+      .sort((a: any, b: any) => parseFloat(b.amount) - parseFloat(a.amount))
+      .slice(0, limit);
+
+    return sorted.map((acc: any) => ({
+      address: acc.owner || acc.address,
+      balance: acc.amount,
+      percentage: total > 0 ? (parseFloat(acc.amount) / total) * 100 : 0
+    }));
+  } catch (error) {
+    console.error('Error fetching Solana top holders:', error);
+    return [];
+  }
+}
+
+
+
+
   private getDefaultMetrics(): OnchainMetrics {
     return {
       transactions: 0,
@@ -543,6 +628,78 @@ export class EthereumDataFetcher {
     }
   }
 
+  public async getTokenInfo(contractAddress: string): Promise<{
+  name: string;
+  symbol: string;
+  decimals: number;
+  totalSupply: string;
+  priceUsd?: number;
+}> {
+  try {
+    const info = await this.fetchTokenInfo(contractAddress);
+    if (!info) throw new Error("Token info not found");
+
+    // Try to get price from DEX metrics
+    const dexData = await this.fetchDEXMetrics(contractAddress);
+    const priceUsd = dexData.pairs?.[0]?.price ?? 0;
+
+    return {
+      name: info.name,
+      symbol: info.symbol,
+      decimals: parseInt(info.decimals),
+      totalSupply: info.totalSupply,
+      priceUsd
+    };
+  } catch (error) {
+    console.error("Error fetching Ethereum token info:", error);
+    return {
+      name: "Unknown",
+      symbol: "UNKNOWN",
+      decimals: 0,
+      totalSupply: "0",
+      priceUsd: 0
+    };
+  }
+}
+
+
+  async fetchTopHolders(contractAddress: string, limit: number = 10): Promise<Array<{
+  address: string;
+  balance: string;
+  percentage: number;
+}>> {
+  try {
+    // Use Etherscan tokenholder API
+    const response = await axios.get(
+      `https://api.etherscan.io/api?module=token&action=tokenholderlist&contractaddress=${contractAddress}&page=1&offset=${limit}&apikey=${this.etherscanApiKey}`,
+      { timeout: 10000 }
+    );
+
+    const result = response.data?.result;
+    if (!result || !Array.isArray(result)) {
+      console.warn('No holder data found on Etherscan');
+      return [];
+    }
+
+    // Total supply needed for percentage calculation
+    const tokenInfo = await this.fetchTokenInfo(contractAddress);
+    const totalSupply = tokenInfo ? parseFloat(ethers.formatUnits(tokenInfo.totalSupply, parseInt(tokenInfo.decimals))) : 0;
+
+    return result.slice(0, limit).map((holder: any) => {
+      const balance = parseFloat(ethers.formatUnits(holder.Balance, tokenInfo ? parseInt(tokenInfo.decimals) : 18));
+      return {
+        address: holder.TokenHolderAddress,
+        balance: balance.toString(),
+        percentage: totalSupply > 0 ? (balance / totalSupply) * 100 : 0
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching top holders:', error);
+    return [];
+  }
+}
+
+
   private getDefaultMetrics(): OnchainMetrics {
     return {
       transactions: 0,
@@ -612,6 +769,29 @@ export class OnchainDataFetcher {
     
     return { pairs: [], totalLiquidity: 0, totalVolume24h: 0 };
   }
+
+  async fetchTopHolders(address: string, limit: number = 10) {
+  const chain = detectChain(address);
+
+  if (chain === 'ethereum') {
+    return this.ethereumFetcher.fetchTopHolders(address, limit);
+  } else if (chain === 'solana') {
+    return this.solanaFetcher.fetchTopHolders(address, limit);
+  }
+  return [];
+}
+
+async fetchTokenInfo(address: string) {
+  const chain = detectChain(address);
+
+  if (chain === 'ethereum') {
+    return this.ethereumFetcher.getTokenInfo(address);
+  } else if (chain === 'solana') {
+    return this.solanaFetcher.getTokenInfo(address);
+  }
+  return null;
+}
+
 }
 
 // ============================================================================
