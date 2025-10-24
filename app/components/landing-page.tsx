@@ -1406,7 +1406,7 @@ const roadmapPhases = [
             {/* Token Allocation */}
             <div className="space-y-8">
               <h3 className="text-3xl font-light text-white tracking-wide mb-8">
-                Token Allocation
+                Token
               </h3>
 
               <div className="bg-gray-950/50 border border-gray-800/50 backdrop-blur-sm p-8">
@@ -1502,22 +1502,6 @@ const roadmapPhases = [
                   </svg>
                 </div>
 
-                {/* Legend */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {tokenAllocation.map((segment, i) => (
-                    <div key={i} className="flex items-center space-x-3">
-                      <div className={`w-4 h-4 ${segment.color}`}></div>
-                      <div className="flex items-center justify-between w-full">
-                        <span className="text-gray-300 font-light text-sm">
-                          {segment.category}
-                        </span>
-                        <span className="text-gray-400 font-light text-sm">
-                          {segment.percentage}%
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
 
               {/* Incentive Model */}
