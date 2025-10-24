@@ -139,7 +139,7 @@ export class SolanaDataFetcher {
     }
   }
 
-  private async fetchTokenInfo(mintAddress: string): Promise<SolanaTokenInfo | null> {
+  async fetchTokenInfo(mintAddress: string): Promise<SolanaTokenInfo | null> {
     try {
       // Try to get token metadata from Solana RPC
       const response = await axios.post(this.rpcUrl, {
@@ -341,42 +341,6 @@ export class SolanaDataFetcher {
       return { pairs: [], totalLiquidity: 0, totalVolume24h: 0 };
     }
   }
-
-  public async getTokenInfo(mintAddress: string): Promise<{
-  name: string;
-  symbol: string;
-  decimals: number;
-  totalSupply: string;
-  priceUsd?: number;
-}> {
-  try {
-    console.log(`Fetching Solana token info for: ${mintAddress}`);
-    const info = await this.fetchTokenInfo(mintAddress);
-    if (!info) throw new Error("Token info not found");
-
-    // Enrich with price data from DexScreener
-    const dexData = await this.fetchDEXMetrics(mintAddress);
-    const priceUsd = dexData.pairs?.[0]?.price ?? 0;
-
-    return {
-      name: info.name,
-      symbol: info.symbol,
-      decimals: info.decimals,
-      totalSupply: info.supply,
-      priceUsd
-    };
-  } catch (error) {
-    console.error("Error fetching Solana token info:", error);
-    return {
-      name: "Unknown",
-      symbol: "UNKNOWN",
-      decimals: 0,
-      totalSupply: "0",
-      priceUsd: 0
-    };
-  }
-}
-
 
   async fetchTopHolders(mintAddress: string, limit: number = 10): Promise<Array<{
   address: string;
@@ -785,9 +749,9 @@ async fetchTokenInfo(address: string) {
   const chain = detectChain(address);
 
   if (chain === 'ethereum') {
-    return this.ethereumFetcher.getTokenInfo(address);
+    return this.ethereumFetcher.fetchTokenMetrics(address);
   } else if (chain === 'solana') {
-    return this.solanaFetcher.getTokenInfo(address);
+    return this.solanaFetcher.fetchTokenInfo(address);
   }
   return null;
 }
