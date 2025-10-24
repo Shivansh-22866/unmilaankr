@@ -1,7 +1,7 @@
 import { MomentumData, ProjectConfig, AgentContext } from '@/types/agent';
 import { GitHubDataFetcher, parseGitHubRepo } from '@/lib/data/github';
 import { TwitterMetricsCalculator, extractTwitterHandle } from '@/lib/data/twitter-scraper';
-import { OnchainDataFetcher, isValidEthereumAddress } from '@/lib/data/onchain';
+import { OnchainDataFetcher, isValidEthereumAddress, isValidSolanaAddress } from '@/lib/data/onchain';
 
 export async function fetchMomentumData(
   project: ProjectConfig,
@@ -11,7 +11,12 @@ export async function fetchMomentumData(
 
   const githubFetcher = new GitHubDataFetcher(process.env.GITHUB_TOKEN!);
   const twitterCalculator = new TwitterMetricsCalculator(false); // false = use Puppeteer
-  const onchainFetcher = new OnchainDataFetcher(process.env.ETHERSCAN_API_KEY!);
+  const onchainFetcher = new OnchainDataFetcher(
+  process.env.ETHERSCAN_API_KEY!,
+  process.env.HELIUS_API_KEY,
+  process.env.ALCHEMY_RPC_URL,
+  process.env.SOLANA_RPC_URL
+);
 
   let github = {
     stars: 0, forks: 0, commits: 0, contributors: 0,
@@ -54,7 +59,7 @@ export async function fetchMomentumData(
   }
 
   // Onchain
-  if (project.contractAddress && isValidEthereumAddress(project.contractAddress)) {
+  if (project.contractAddress && (isValidEthereumAddress(project.contractAddress) || isValidSolanaAddress(project.contractAddress))) {
     onchain = await onchainFetcher.fetchTokenMetrics(project.contractAddress);
   }
 

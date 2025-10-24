@@ -16,6 +16,7 @@ import {
   DollarSign,
   Target,
   Zap,
+  Link2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -49,6 +50,8 @@ interface DEXMetrics {
   totalVolume24h: number
 }
 
+type ChainType = 'ethereum' | 'solana' | 'unknown'
+
 export default function OnchainAnalytics() {
   const [contractAddress, setContractAddress] = useState("")
   const [loading, setLoading] = useState(false)
@@ -62,6 +65,7 @@ export default function OnchainAnalytics() {
   const [topHolders, setTopHolders] = useState<Array<{ address: string; balance: string; percentage: number }>>([])
   const [error, setError] = useState<string | null>(null)
   const [insight, setInsight] = useState<Awaited<ReturnType<typeof generateOnchainInsight>> | null>(null)
+  const [detectedChain, setDetectedChain] = useState<ChainType>('unknown')
 
   const searchParams = useSearchParams()
 
@@ -75,9 +79,31 @@ export default function OnchainAnalytics() {
     }
   }, [searchParams])
 
+  // Detect chain type from address
+  const detectChainType = (address: string): ChainType => {
+    // Ethereum: 0x + 40 hex chars
+    if (/^0x[a-fA-F0-9]{40}$/.test(address)) {
+      return 'ethereum'
+    }
+    // Solana: Base58, 32-44 chars
+    if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)) {
+      return 'solana'
+    }
+    return 'unknown'
+  }
+
   const handleAnalyzeWithAddress = async (address: string) => {
     if (!address.trim()) {
-      setError("Please enter a valid Ethereum contract address")
+      setError("Please enter a valid contract address")
+      return
+    }
+
+    // Detect chain type
+    const chain = detectChainType(address)
+    setDetectedChain(chain)
+
+    if (chain === 'unknown') {
+      setError("Invalid address format. Please enter a valid Ethereum (0x...) or Solana address")
       return
     }
 
@@ -126,7 +152,32 @@ export default function OnchainAnalytics() {
   }
 
   const formatAddress = (address: string) => {
+    if (address.length > 40) {
+      // Solana address (longer)
+      return `${address.slice(0, 8)}...${address.slice(-6)}`
+    }
+    // Ethereum address
     return `${address.slice(0, 6)}...${address.slice(-4)}`
+  }
+
+  const getExplorerUrl = (address: string, chain: ChainType) => {
+    if (chain === 'ethereum') {
+      return `https://etherscan.io/token/${address}`
+    } else if (chain === 'solana') {
+      return `https://solscan.io/token/${address}`
+    }
+    return '#'
+  }
+
+  const getChainBadgeColor = (chain: ChainType) => {
+    switch (chain) {
+      case 'ethereum':
+        return 'border-blue-500/50 text-blue-400 bg-blue-500/10'
+      case 'solana':
+        return 'border-purple-500/50 text-purple-400 bg-purple-500/10'
+      default:
+        return 'border-gray-500/50 text-gray-400 bg-gray-500/10'
+    }
   }
 
   return (
@@ -200,7 +251,7 @@ export default function OnchainAnalytics() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5, duration: 1 }}
             >
-              Advanced Blockchain Intelligence • Real-time Token Analytics • DeFi Insights
+              Multi-Chain Intelligence • Ethereum & Solana • Real-time Token Analytics
             </motion.p>
           </motion.div>
 
@@ -215,20 +266,34 @@ export default function OnchainAnalytics() {
               <CardHeader className="border-b border-green-500/20">
                 <CardTitle className="text-2xl text-white font-mono flex items-center">
                   <Search className="h-6 w-6 mr-3 text-green-400" />
-                  CONTRACT ANALYZER
+                  MULTI-CHAIN ANALYZER
                 </CardTitle>
+                <p className="text-gray-400 text-sm mt-2">
+                  Supports Ethereum (0x...) and Solana addresses
+                </p>
               </CardHeader>
               <CardContent className="p-8">
                 <div className="flex space-x-4">
                   <div className="flex-1">
                     <Input
                       type="text"
-                      placeholder="Enter Ethereum contract address (e.g., 0x...)"
+                      placeholder="Enter contract address (Ethereum: 0x... | Solana: base58)"
                       value={contractAddress}
-                      onChange={(e) => setContractAddress(e.target.value)}
+                      onChange={(e) => {
+                        setContractAddress(e.target.value)
+                        setDetectedChain(detectChainType(e.target.value))
+                      }}
                       className="bg-black/40 border-green-500/30 text-white placeholder-gray-400 text-lg py-6 font-mono"
                       onKeyPress={(e) => e.key === "Enter" && handleAnalyze()}
                     />
+                    {contractAddress && detectedChain !== 'unknown' && (
+                      <div className="mt-2">
+                        <Badge className={`${getChainBadgeColor(detectedChain)} px-3 py-1`}>
+                          {detectedChain === 'ethereum' && '🔷 Ethereum'}
+                          {detectedChain === 'solana' && '🟣 Solana'}
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                   <Button
                     onClick={handleAnalyze}
@@ -284,11 +349,27 @@ export default function OnchainAnalytics() {
                       <div className="flex items-center space-x-4">
                         <Coins className="h-8 w-8 text-blue-400" />
                         <div>
-                          <CardTitle className="text-3xl text-white font-mono">
-                            {tokenInfo ? `${tokenInfo.name} (${tokenInfo.symbol})` : formatAddress(contractAddress)}
-                          </CardTitle>
+                          <div className="flex items-center space-x-3">
+                            <CardTitle className="text-3xl text-white font-mono">
+                              {tokenInfo ? `${tokenInfo.name} (${tokenInfo.symbol})` : formatAddress(contractAddress)}
+                            </CardTitle>
+                            <Badge className={getChainBadgeColor(detectedChain)}>
+                              {detectedChain === 'ethereum' && '🔷 ETH'}
+                              {detectedChain === 'solana' && '🟣 SOL'}
+                            </Badge>
+                          </div>
                           <p className="text-gray-400 text-lg">Onchain Analysis Complete</p>
-                          <p className="text-gray-500 text-sm font-mono">{contractAddress}</p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <p className="text-gray-500 text-sm font-mono">{contractAddress}</p>
+                            <a
+                              href={getExplorerUrl(contractAddress, detectedChain)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-400 hover:text-blue-300 transition-colors"
+                            >
+                              <Link2 className="h-4 w-4" />
+                            </a>
+                          </div>
                         </div>
                       </div>
                       <Badge variant="outline" className="border-green-500/50 text-green-400 bg-green-500/10 px-4 py-2">
@@ -522,33 +603,32 @@ export default function OnchainAnalytics() {
                     </CardContent>
                   </Card>
                 )}
+
+                {/* AI Insights */}
+                {insight && (
+                  <Card className="bg-black/60 backdrop-blur-md border border-yellow-500/30 shadow-2xl">
+                    <CardHeader className="border-b border-yellow-500/20">
+                      <CardTitle className="text-xl text-white font-mono">💡 AI INSIGHTS</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6 text-gray-300 font-mono space-y-4 text-sm">
+                      <p><strong>📌 Summary:</strong> {insight.summary}</p>
+                      <p><strong>📈 Outlook:</strong> <span className="text-green-400">{insight.outlook}</span></p>
+                      <p><strong>⚠️ Risk Level:</strong> <span className="text-red-400">{insight.riskLevel}</span></p>
+                      <p><strong>💬 Reason:</strong> {insight.reason}</p>
+                      <div>
+                        <p className="font-bold mb-1">🔍 Key Signals:</p>
+                        <ul className="list-disc list-inside text-gray-400">
+                          {insight.keySignals.map((signal, index) => (
+                            <li key={index}>{signal}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
-          <div>
-            {insight && (
-  <Card className="bg-black/60 backdrop-blur-md border border-yellow-500/30 shadow-2xl mt-8">
-    <CardHeader className="border-b border-yellow-500/20">
-      <CardTitle className="text-xl text-white font-mono">💡 AI INSIGHTS</CardTitle>
-    </CardHeader>
-    <CardContent className="p-6 text-gray-300 font-mono space-y-4 text-sm">
-      <p><strong>📌 Summary:</strong> {insight.summary}</p>
-      <p><strong>📈 Outlook:</strong> <span className="text-green-400">{insight.outlook}</span></p>
-      <p><strong>⚠️ Risk Level:</strong> <span className="text-red-400">{insight.riskLevel}</span></p>
-      <p><strong>💬 Reason:</strong> {insight.reason}</p>
-      <div>
-        <p className="font-bold mb-1">🔍 Key Signals:</p>
-        <ul className="list-disc list-inside text-gray-400">
-          {insight.keySignals.map((signal, index) => (
-            <li key={index}>{signal}</li>
-          ))}
-        </ul>
-      </div>
-    </CardContent>
-  </Card>
-)}
-
-          </div>
         </div>
       </GestureInterface>
     </div>
