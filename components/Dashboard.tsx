@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { createX402Client } from '@payai/x402-solana/client';
-import { CustomWallet, useAppKit, useAppKitAccount, useAppKitProvider, useDisconnect } from "@reown/appkit/react";
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { PublicKey, Transaction, VersionedTransaction, Connection } from '@solana/web3.js';
 import {
   Github,
@@ -21,6 +21,7 @@ import {
   Zap,
   TrendingUp,
   BarChart3,
+  Wallet,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -38,17 +39,18 @@ import { MomentumTimeSeries } from "./MomentumTimeSeries"
 import { AIInsightsDisplay } from "./AIInsightsDisplay"
 import { useRouter } from "next/navigation"
 import { InfoList } from "./InfoList";
-import ConnectButton from "./ConnectButton";
 import { ActionButtonList } from "./ActionButtonList";
-import { Provider } from "ethers";
-import type { WalletAdapter } from '@solana/wallet-adapter-base'
 
 export default function Dashboard() {
   const router = useRouter()
-  const {open} = useAppKit()
-  const {address, isConnected} = useAppKitAccount()
-  const disconnect = useDisconnect()
-  const {walletProvider} = useAppKitProvider<Provider>("solana")
+  const { ready, authenticated, login, logout, user } = usePrivy()
+  const { wallets } = useWallets()
+  
+  // Get Solana wallet from user's embedded wallet or connected wallets
+  const solanaWallet = user?.linkedAccounts?.find((account: any) => 
+    account.type === 'wallet' && account.chainType === 'solana'
+  ) || wallets.find((wallet: any) => wallet.chainType === 'solana')
+  
   const [loading, setLoading] = useState(false)
   const [score, setScore] = useState<MomentumScore | null>(null)
   const [alerts, setAlerts] = useState<AlertType[]>([])
@@ -118,63 +120,45 @@ export default function Dashboard() {
     setCommunityWeight(0.15)
   }
 
-function walletStandardToAdapter(walletProvider: any) {
-  const wallet = walletProvider?.wallet;
-  if (!wallet) throw new Error("Wallet provider missing wallet property");
+  async function createSolanaWalletAdapter(wallet: any) {
+    if (!wallet) throw new Error("No Solana wallet found");
 
-  const account = wallet.accounts?.[0];
-  if (!account) throw new Error("No connected wallet account found");
+    const address = wallet.address;
+    if (!address) throw new Error("Wallet address not available");
 
-  const signTxFeature = wallet.features?.["solana:signTransaction"];
-  if (!signTxFeature) {
-    throw new Error("Wallet does not support solana:signTransaction");
+    return {
+      publicKey: new PublicKey(address),
+
+      async signTransaction(
+        tx: Transaction | VersionedTransaction
+      ): Promise<VersionedTransaction> {
+        console.log("[Adapter] Signing transaction...");
+
+        // Use Privy's signTransaction method
+        const signedTx = await wallet.signTransaction(tx);
+        
+        // If it's already a VersionedTransaction, return it
+        if (signedTx instanceof VersionedTransaction) {
+          return signedTx;
+        }
+
+        // Otherwise, convert to VersionedTransaction
+        const serialized = signedTx.serialize({ requireAllSignatures: false });
+        return VersionedTransaction.deserialize(serialized);
+      },
+
+      async sendTransaction(
+        tx: Transaction | VersionedTransaction,
+        connection: Connection
+      ): Promise<string> {
+        console.log("[Adapter] Sending transaction...");
+        const signed = await this.signTransaction(tx);
+        const sig = await connection.sendRawTransaction(signed.serialize());
+        console.log("[Adapter] Transaction sent:", sig);
+        return sig;
+      },
+    };
   }
-
-  return {
-    publicKey: new PublicKey(account.address),
-
-    /**
-     * Sign a transaction, supporting both legacy and versioned transactions.
-     */
-    async signTransaction(
-      tx: Transaction | VersionedTransaction
-    ): Promise<VersionedTransaction> {
-      console.log("[Adapter] Signing transaction...");
-
-      const serialized = tx.serialize({ requireAllSignatures: false });
-      const signedTxBytes = await signTxFeature.signTransaction(serialized, { account });
-
-      // Try to deserialize as a VersionedTransaction first
-      try {
-        const vtx = VersionedTransaction.deserialize(signedTxBytes);
-        return vtx;
-      } catch {
-        console.warn(
-          "[Adapter] Fallback to legacy Transaction detected — wrapping in VersionedTransaction format."
-        );
-        // If it's an old Transaction, just reserialize and send as a VersionedTransaction substitute.
-        const legacyTx = Transaction.from(signedTxBytes);
-        // Serialize again as a VersionedTransaction for downstream compatibility
-        const serializedLegacy = legacyTx.serialize();
-        return VersionedTransaction.deserialize(serializedLegacy);
-      }
-    },
-
-    /**
-     * Send a signed transaction to the network.
-     */
-    async sendTransaction(
-      tx: Transaction | VersionedTransaction,
-      connection: Connection
-    ): Promise<string> {
-      console.log("[Adapter] Sending transaction...");
-      const signed = await this.signTransaction(tx);
-      const sig = await connection.sendRawTransaction(signed.serialize());
-      console.log("[Adapter] Transaction sent:", sig);
-      return sig;
-    },
-  };
-}
 
   useEffect(() => {
     const timer = setTimeout(() => setIsInitialized(true), 1000)
@@ -188,9 +172,9 @@ function walletStandardToAdapter(walletProvider: any) {
 
   const handleRunAgent = async () => {
     console.log("Running agent...")
-    if(!isConnected || !walletProvider) {
+    if(!authenticated || !solanaWallet) {
       setError("Please connect your wallet to run the analysis.")
-      open()
+      login()
       console.log("Please connect your wallet to run the analysis.")
       return
     }
@@ -206,20 +190,19 @@ function walletStandardToAdapter(walletProvider: any) {
         community: communityWeight,
       }
 
-      console.log("Wallet Provider: ", walletProvider)
+      console.log("Solana Wallet: ", solanaWallet)
 
-      // const solanaWallet = (walletProvider as any)?.adapter
-      const solanaWallet = walletStandardToAdapter(walletProvider);
-      console.log("Solana wallet: ", solanaWallet)
+      const walletAdapter = await createSolanaWalletAdapter(solanaWallet);
+      console.log("Wallet adapter: ", walletAdapter)
 
-      if (!solanaWallet || typeof solanaWallet.signTransaction !== 'function') {
+      if (!walletAdapter || typeof walletAdapter.signTransaction !== 'function') {
         setError("Invalid or unsupported wallet adapter")
-        console.log("Invalid or unsupported wallet adapter", solanaWallet)
+        console.log("Invalid or unsupported wallet adapter", walletAdapter)
         return
       }
 
       const client = createX402Client({
-                wallet: solanaWallet,
+                wallet: walletAdapter,
                 network: 'solana',
                 rpcUrl: "https://mainnet.helius-rpc.com/?api-key=59d15393-1c14-4115-b919-76b0ba1b6361",
                 maxPaymentAmount: BigInt(1_000_000_000_000_000), // 100,000 USDC in micro-units
@@ -227,19 +210,7 @@ function walletStandardToAdapter(walletProvider: any) {
 
       console.log("Client: ", client)
 
-            // Make a paid request - automatically handles 402 payments
-            // const response = await client.fetch('/api/payment/swap', {
-            //     method: 'POST',
-            //     body: JSON.stringify({
-            //         playerAddress: ethAddress,
-            //         userWallet: userWallet.toString(),
-            //         amount: amount,
-            //     }),
-            // });
-
-            // const result = await response.json();
-
-      let res = await client.fetch("/api/agent", {
+      const res = await client.fetch("/api/agent", {
         method: "POST",
         body: JSON.stringify({
           project: projectConfig,
@@ -296,9 +267,39 @@ function walletStandardToAdapter(walletProvider: any) {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
+      {/* Wallet Connection UI */}
+      <div className="fixed top-4 right-4 z-50">
+        {ready && !authenticated ? (
+          <Button
+            onClick={login}
+            className="bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-black px-6 py-3 rounded-lg font-mono text-sm tracking-wide uppercase transition-all duration-300 border border-cyan-400/20 flex items-center gap-2"
+          >
+            <Wallet className="h-4 w-4" />
+            Connect Wallet
+          </Button>
+        ) : ready && authenticated && solanaWallet ? (
+          <div className="flex items-center gap-3">
+            <div className="bg-black/40 backdrop-blur-sm border border-white/10 px-4 py-3 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                <span className="text-white font-mono text-sm">
+                  {('address' in solanaWallet) && solanaWallet.address.slice(0, 4)}...{('address' in solanaWallet) && solanaWallet.address.slice(-4)}
+                </span>
+              </div>
+            </div>
+            <Button
+              onClick={logout}
+              variant="outline"
+              className="border-white/20 text-white hover:bg-white/10 bg-black/40 backdrop-blur-sm font-mono text-sm"
+            >
+              Disconnect
+            </Button>
+          </div>
+        ) : null}
+      </div>
+      
       <div className="z-50">
       {/* <InfoList/> */}
-      <ConnectButton/>
       <ActionButtonList/>
       </div>
       {/* Futuristic Grid Background with Gradients - exactly like landing page */}
