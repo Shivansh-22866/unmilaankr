@@ -1468,7 +1468,6 @@ const roadmapPhases = [
                         A 40 40 0 ${largeArcFlag} 1 ${x2} ${y2}
                         Z
                       `;
-
                           acc.paths.push(
                             <path
                               key={i}

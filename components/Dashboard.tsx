@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { createX402Client } from '@payai/x402-solana/client';
+import { CustomWallet, useAppKit, useAppKitAccount, useAppKitProvider, useDisconnect } from "@reown/appkit/react";
+import { PublicKey, Transaction, VersionedTransaction, Connection } from '@solana/web3.js';
 import {
   Github,
   Twitter,
@@ -34,9 +37,18 @@ import type {
 import { MomentumTimeSeries } from "./MomentumTimeSeries"
 import { AIInsightsDisplay } from "./AIInsightsDisplay"
 import { useRouter } from "next/navigation"
+import { InfoList } from "./InfoList";
+import ConnectButton from "./ConnectButton";
+import { ActionButtonList } from "./ActionButtonList";
+import { Provider } from "ethers";
+import type { WalletAdapter } from '@solana/wallet-adapter-base'
 
 export default function Dashboard() {
   const router = useRouter()
+  const {open} = useAppKit()
+  const {address, isConnected} = useAppKitAccount()
+  const disconnect = useDisconnect()
+  const {walletProvider} = useAppKitProvider<Provider>("solana")
   const [loading, setLoading] = useState(false)
   const [score, setScore] = useState<MomentumScore | null>(null)
   const [alerts, setAlerts] = useState<AlertType[]>([])
@@ -76,6 +88,7 @@ export default function Dashboard() {
   const [, setError] = useState<string | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
+
   const [projectConfig, setProjectConfig] = useState<ProjectConfig>({
     name: "Lens Protocol",
     githubRepo: "",
@@ -105,6 +118,64 @@ export default function Dashboard() {
     setCommunityWeight(0.15)
   }
 
+function walletStandardToAdapter(walletProvider: any) {
+  const wallet = walletProvider?.wallet;
+  if (!wallet) throw new Error("Wallet provider missing wallet property");
+
+  const account = wallet.accounts?.[0];
+  if (!account) throw new Error("No connected wallet account found");
+
+  const signTxFeature = wallet.features?.["solana:signTransaction"];
+  if (!signTxFeature) {
+    throw new Error("Wallet does not support solana:signTransaction");
+  }
+
+  return {
+    publicKey: new PublicKey(account.address),
+
+    /**
+     * Sign a transaction, supporting both legacy and versioned transactions.
+     */
+    async signTransaction(
+      tx: Transaction | VersionedTransaction
+    ): Promise<VersionedTransaction> {
+      console.log("[Adapter] Signing transaction...");
+
+      const serialized = tx.serialize({ requireAllSignatures: false });
+      const signedTxBytes = await signTxFeature.signTransaction(serialized, { account });
+
+      // Try to deserialize as a VersionedTransaction first
+      try {
+        const vtx = VersionedTransaction.deserialize(signedTxBytes);
+        return vtx;
+      } catch {
+        console.warn(
+          "[Adapter] Fallback to legacy Transaction detected — wrapping in VersionedTransaction format."
+        );
+        // If it's an old Transaction, just reserialize and send as a VersionedTransaction substitute.
+        const legacyTx = Transaction.from(signedTxBytes);
+        // Serialize again as a VersionedTransaction for downstream compatibility
+        const serializedLegacy = legacyTx.serialize();
+        return VersionedTransaction.deserialize(serializedLegacy);
+      }
+    },
+
+    /**
+     * Send a signed transaction to the network.
+     */
+    async sendTransaction(
+      tx: Transaction | VersionedTransaction,
+      connection: Connection
+    ): Promise<string> {
+      console.log("[Adapter] Sending transaction...");
+      const signed = await this.signTransaction(tx);
+      const sig = await connection.sendRawTransaction(signed.serialize());
+      console.log("[Adapter] Transaction sent:", sig);
+      return sig;
+    },
+  };
+}
+
   useEffect(() => {
     const timer = setTimeout(() => setIsInitialized(true), 1000)
     const timeInterval = setInterval(() => setCurrentTime(new Date()), 1000)
@@ -116,6 +187,13 @@ export default function Dashboard() {
   }, [])
 
   const handleRunAgent = async () => {
+    console.log("Running agent...")
+    if(!isConnected || !walletProvider) {
+      setError("Please connect your wallet to run the analysis.")
+      open()
+      console.log("Please connect your wallet to run the analysis.")
+      return
+    }
     setLoading(true)
     setError(null)
     try {
@@ -128,9 +206,41 @@ export default function Dashboard() {
         community: communityWeight,
       }
 
-      const res = await fetch("/api/agent", {
+      console.log("Wallet Provider: ", walletProvider)
+
+      // const solanaWallet = (walletProvider as any)?.adapter
+      const solanaWallet = walletStandardToAdapter(walletProvider);
+      console.log("Solana wallet: ", solanaWallet)
+
+      if (!solanaWallet || typeof solanaWallet.signTransaction !== 'function') {
+        setError("Invalid or unsupported wallet adapter")
+        console.log("Invalid or unsupported wallet adapter", solanaWallet)
+        return
+      }
+
+      const client = createX402Client({
+                wallet: solanaWallet,
+                network: 'solana',
+                rpcUrl: "https://mainnet.helius-rpc.com/?api-key=59d15393-1c14-4115-b919-76b0ba1b6361",
+                maxPaymentAmount: BigInt(1_000_000_000_000_000), // 100,000 USDC in micro-units
+            });
+
+      console.log("Client: ", client)
+
+            // Make a paid request - automatically handles 402 payments
+            // const response = await client.fetch('/api/payment/swap', {
+            //     method: 'POST',
+            //     body: JSON.stringify({
+            //         playerAddress: ethAddress,
+            //         userWallet: userWallet.toString(),
+            //         amount: amount,
+            //     }),
+            // });
+
+            // const result = await response.json();
+
+      let res = await client.fetch("/api/agent", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           project: projectConfig,
           timeWindow: 48,
@@ -138,7 +248,9 @@ export default function Dashboard() {
           anomalyThreshold: 2.5,
           weights: normalizedWeights,
         }),
-      })
+      });
+
+      console.log("Response:", res)
 
       const json = await res.json()
       if (json.status === "ok") {
@@ -157,6 +269,7 @@ export default function Dashboard() {
         console.log("AI INSIGHTS", insights)
       } else {
         setError("Neural network synchronization failed.")
+        console.error("Neural network synchronization failed.")
       }
     } catch (err) {
       console.error(err)
@@ -183,6 +296,11 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
+      <div className="z-50">
+      {/* <InfoList/> */}
+      <ConnectButton/>
+      <ActionButtonList/>
+      </div>
       {/* Futuristic Grid Background with Gradients - exactly like landing page */}
       <div className="absolute inset-0">
         {/* Radial gradients for depth */}

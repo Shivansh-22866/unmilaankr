@@ -23,10 +23,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { DiscordMessagesViz } from "@/app/components/DiscordCanvasViz"
-import { CommunityHealthScore } from "@/app/components/CommunityHealthScore"
-import { ParticleSystem } from "@/app/components/ParticleSystem"
-import { GestureInterface } from "@/app/components/GestureInterface"
+import { DiscordMessagesViz } from "@/components/DiscordCanvasViz"
+import { CommunityHealthScore } from "@/components/CommunityHealthScore"
+import { ParticleSystem } from "@/components/ParticleSystem"
+import { GestureInterface } from "@/components/GestureInterface"
 
 interface DiscordMessage {
   author: string

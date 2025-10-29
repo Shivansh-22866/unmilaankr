@@ -22,10 +22,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { GitHubMetricsViz } from "@/app/components/GithubMetricsViz";
-import { RepoHealthScore } from "@/app/components/RepoHealthScore";
-import { ParticleSystem } from "@/app/components/ParticleSystem";
-import { GestureInterface } from "@/app/components/GestureInterface";
+import { GitHubMetricsViz } from "@/components/GithubMetricsViz";
+import { RepoHealthScore } from "@/components/RepoHealthScore";
+import { ParticleSystem } from "@/components/ParticleSystem";
+import { GestureInterface } from "@/components/GestureInterface";
 import { generateGitHubInsight } from "@/lib/ai/githubInsights";
 import type { GitHubMetrics } from "@/types/agent";
 
