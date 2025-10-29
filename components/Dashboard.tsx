@@ -39,7 +39,6 @@ import { MomentumTimeSeries } from "./MomentumTimeSeries"
 import { AIInsightsDisplay } from "./AIInsightsDisplay"
 import { useRouter } from "next/navigation"
 import { InfoList } from "./InfoList";
-import { ActionButtonList } from "./ActionButtonList";
 
 export default function Dashboard() {
   const router = useRouter()
@@ -300,7 +299,7 @@ export default function Dashboard() {
       
       <div className="z-50">
       {/* <InfoList/> */}
-      <ActionButtonList/>
+      {/* <ActionButtonList/> */}
       </div>
       {/* Futuristic Grid Background with Gradients - exactly like landing page */}
       <div className="absolute inset-0">
