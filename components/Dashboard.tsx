@@ -41,7 +41,7 @@ import { InfoList } from "./InfoList";
 import ConnectButton from "./ConnectButton";
 import { ActionButtonList } from "./ActionButtonList";
 import { Provider } from "ethers";
-import type { WalletAdapter } from '@solana/wallet-adapter-base'
+import { modal } from "@/contexts";
 
 export default function Dashboard() {
   const router = useRouter()
@@ -118,64 +118,6 @@ export default function Dashboard() {
     setCommunityWeight(0.15)
   }
 
-function walletStandardToAdapter(walletProvider: any) {
-  const wallet = walletProvider?.wallet;
-  if (!wallet) throw new Error("Wallet provider missing wallet property");
-
-  const account = wallet.accounts?.[0];
-  if (!account) throw new Error("No connected wallet account found");
-
-  const signTxFeature = wallet.features?.["solana:signTransaction"];
-  if (!signTxFeature) {
-    throw new Error("Wallet does not support solana:signTransaction");
-  }
-
-  return {
-    publicKey: new PublicKey(account.address),
-
-    /**
-     * Sign a transaction, supporting both legacy and versioned transactions.
-     */
-    async signTransaction(
-      tx: Transaction | VersionedTransaction
-    ): Promise<VersionedTransaction> {
-      console.log("[Adapter] Signing transaction...");
-
-      const serialized = tx.serialize({ requireAllSignatures: false });
-      const signedTxBytes = await signTxFeature.signTransaction(serialized, { account });
-
-      // Try to deserialize as a VersionedTransaction first
-      try {
-        const vtx = VersionedTransaction.deserialize(signedTxBytes);
-        return vtx;
-      } catch {
-        console.warn(
-          "[Adapter] Fallback to legacy Transaction detected — wrapping in VersionedTransaction format."
-        );
-        // If it's an old Transaction, just reserialize and send as a VersionedTransaction substitute.
-        const legacyTx = Transaction.from(signedTxBytes);
-        // Serialize again as a VersionedTransaction for downstream compatibility
-        const serializedLegacy = legacyTx.serialize();
-        return VersionedTransaction.deserialize(serializedLegacy);
-      }
-    },
-
-    /**
-     * Send a signed transaction to the network.
-     */
-    async sendTransaction(
-      tx: Transaction | VersionedTransaction,
-      connection: Connection
-    ): Promise<string> {
-      console.log("[Adapter] Sending transaction...");
-      const signed = await this.signTransaction(tx);
-      const sig = await connection.sendRawTransaction(signed.serialize());
-      console.log("[Adapter] Transaction sent:", sig);
-      return sig;
-    },
-  };
-}
-
   useEffect(() => {
     const timer = setTimeout(() => setIsInitialized(true), 1000)
     const timeInterval = setInterval(() => setCurrentTime(new Date()), 1000)
@@ -208,36 +150,24 @@ function walletStandardToAdapter(walletProvider: any) {
 
       console.log("Wallet Provider: ", walletProvider)
 
-      // const solanaWallet = (walletProvider as any)?.adapter
-      const solanaWallet = walletStandardToAdapter(walletProvider);
-      console.log("Solana wallet: ", solanaWallet)
-
-      if (!solanaWallet || typeof solanaWallet.signTransaction !== 'function') {
-        setError("Invalid or unsupported wallet adapter")
-        console.log("Invalid or unsupported wallet adapter", solanaWallet)
-        return
-      }
+      const provider = modal.getWalletProvider() as any;
+      const address = modal.getAddress();
+      const chain = modal.getChainId();
 
       const client = createX402Client({
-                wallet: solanaWallet,
+                wallet: {
+                  publicKey: new PublicKey(address!),
+                  signTransaction: async (tx) => {
+                    const signed = await provider.signTransaction(tx);
+                    return signed
+                  }
+                },
                 network: 'solana',
-                rpcUrl: "https://mainnet.helius-rpc.com/?api-key=59d15393-1c14-4115-b919-76b0ba1b6361",
+                rpcUrl: process.env.RPC_URL || '',
                 maxPaymentAmount: BigInt(1_000_000_000_000_000), // 100,000 USDC in micro-units
             });
 
       console.log("Client: ", client)
-
-            // Make a paid request - automatically handles 402 payments
-            // const response = await client.fetch('/api/payment/swap', {
-            //     method: 'POST',
-            //     body: JSON.stringify({
-            //         playerAddress: ethAddress,
-            //         userWallet: userWallet.toString(),
-            //         amount: amount,
-            //     }),
-            // });
-
-            // const result = await response.json();
 
       let res = await client.fetch("/api/agent", {
         method: "POST",
