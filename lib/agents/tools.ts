@@ -10,7 +10,7 @@ export async function fetchMomentumData(
   const timestamp = Date.now();
 
   const githubFetcher = new GitHubDataFetcher(process.env.GITHUB_TOKEN!);
-  const twitterCalculator = new TwitterMetricsCalculator(false); // false = use Puppeteer
+  const twitterCalculator = new TwitterMetricsCalculator();
   const onchainFetcher = new OnchainDataFetcher(
   process.env.ETHERSCAN_API_KEY!,
   process.env.HELIUS_API_KEY,
@@ -54,7 +54,8 @@ export async function fetchMomentumData(
   if (project.twitterHandle) {
     const handle = extractTwitterHandle(project.twitterHandle);
     if (handle) {
-      twitter = await twitterCalculator.calculateMetrics(handle, 100);
+      twitter = await twitterCalculator.calculateMetrics(handle, 20);
+      console.log('twitter metrics', twitter)
     }
   }
 
