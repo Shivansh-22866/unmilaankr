@@ -80,6 +80,10 @@ npm install
 
 3. Create a .env.local file
 ```bash
+# Required for Privy wallet integration
+NEXT_PUBLIC_PRIVY_APP_ID=your-privy-app-id
+
+# API Keys
 GITHUB_TOKEN=github-api-key
 TWITTER_BEARER_TOKEN=twitter-dev-api-key
 ETHERSCAN_API_KEY=api-key
@@ -87,6 +91,8 @@ ALCHEMY_RPC_URL=alchemy-rpc-url
 GROQ_API_KEY=your-groq-api-key
 DISCORD_TOKEN=your-discord-token
 ```
+
+> **Note**: Get your Privy App ID from [Privy Dashboard](https://dashboard.privy.io/). See [PRIVY_INTEGRATION.md](./PRIVY_INTEGRATION.md) for detailed setup instructions.
 
 #### Note: Ensure that the discord bot has enough privileged permissions to read a channel's messages, otherwise it may lead to fault during data fetching.
 

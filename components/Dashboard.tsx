@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { createX402Client } from '@payai/x402-solana/client';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { PublicKey, Transaction, VersionedTransaction, Connection } from '@solana/web3.js';
 import {
   Github,
   Twitter,
@@ -18,6 +21,7 @@ import {
   Zap,
   TrendingUp,
   BarChart3,
+  Wallet,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -34,9 +38,18 @@ import type {
 import { MomentumTimeSeries } from "./MomentumTimeSeries"
 import { AIInsightsDisplay } from "./AIInsightsDisplay"
 import { useRouter } from "next/navigation"
+import { InfoList } from "./InfoList";
 
 export default function Dashboard() {
   const router = useRouter()
+  const { ready, authenticated, login, logout, user } = usePrivy()
+  const { wallets } = useWallets()
+  
+  // Get Solana wallet from user's embedded wallet or connected wallets
+  const solanaWallet = user?.linkedAccounts?.find((account: any) => 
+    account.type === 'wallet' && account.chainType === 'solana'
+  ) || wallets.find((wallet: any) => wallet.chainType === 'solana')
+  
   const [loading, setLoading] = useState(false)
   const [score, setScore] = useState<MomentumScore | null>(null)
   const [alerts, setAlerts] = useState<AlertType[]>([])
@@ -76,6 +89,7 @@ export default function Dashboard() {
   const [, setError] = useState<string | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
+
   const [projectConfig, setProjectConfig] = useState<ProjectConfig>({
     name: "Lens Protocol",
     githubRepo: "",
@@ -105,6 +119,46 @@ export default function Dashboard() {
     setCommunityWeight(0.15)
   }
 
+  async function createSolanaWalletAdapter(wallet: any) {
+    if (!wallet) throw new Error("No Solana wallet found");
+
+    const address = wallet.address;
+    if (!address) throw new Error("Wallet address not available");
+
+    return {
+      publicKey: new PublicKey(address),
+
+      async signTransaction(
+        tx: Transaction | VersionedTransaction
+      ): Promise<VersionedTransaction> {
+        console.log("[Adapter] Signing transaction...");
+
+        // Use Privy's signTransaction method
+        const signedTx = await wallet.signTransaction(tx);
+        
+        // If it's already a VersionedTransaction, return it
+        if (signedTx instanceof VersionedTransaction) {
+          return signedTx;
+        }
+
+        // Otherwise, convert to VersionedTransaction
+        const serialized = signedTx.serialize({ requireAllSignatures: false });
+        return VersionedTransaction.deserialize(serialized);
+      },
+
+      async sendTransaction(
+        tx: Transaction | VersionedTransaction,
+        connection: Connection
+      ): Promise<string> {
+        console.log("[Adapter] Sending transaction...");
+        const signed = await this.signTransaction(tx);
+        const sig = await connection.sendRawTransaction(signed.serialize());
+        console.log("[Adapter] Transaction sent:", sig);
+        return sig;
+      },
+    };
+  }
+
   useEffect(() => {
     const timer = setTimeout(() => setIsInitialized(true), 1000)
     const timeInterval = setInterval(() => setCurrentTime(new Date()), 1000)
@@ -116,6 +170,13 @@ export default function Dashboard() {
   }, [])
 
   const handleRunAgent = async () => {
+    console.log("Running agent...")
+    if(!authenticated || !solanaWallet) {
+      setError("Please connect your wallet to run the analysis.")
+      login()
+      console.log("Please connect your wallet to run the analysis.")
+      return
+    }
     setLoading(true)
     setError(null)
     try {
@@ -128,9 +189,28 @@ export default function Dashboard() {
         community: communityWeight,
       }
 
-      const res = await fetch("/api/agent", {
+      console.log("Solana Wallet: ", solanaWallet)
+
+      const walletAdapter = await createSolanaWalletAdapter(solanaWallet);
+      console.log("Wallet adapter: ", walletAdapter)
+
+      if (!walletAdapter || typeof walletAdapter.signTransaction !== 'function') {
+        setError("Invalid or unsupported wallet adapter")
+        console.log("Invalid or unsupported wallet adapter", walletAdapter)
+        return
+      }
+
+      const client = createX402Client({
+                wallet: walletAdapter,
+                network: 'solana',
+                rpcUrl: "https://mainnet.helius-rpc.com/?api-key=59d15393-1c14-4115-b919-76b0ba1b6361",
+                maxPaymentAmount: BigInt(1_000_000_000_000_000), // 100,000 USDC in micro-units
+            });
+
+      console.log("Client: ", client)
+
+      const res = await client.fetch("/api/agent", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           project: projectConfig,
           timeWindow: 48,
@@ -138,7 +218,9 @@ export default function Dashboard() {
           anomalyThreshold: 2.5,
           weights: normalizedWeights,
         }),
-      })
+      });
+
+      console.log("Response:", res)
 
       const json = await res.json()
       if (json.status === "ok") {
@@ -157,6 +239,7 @@ export default function Dashboard() {
         console.log("AI INSIGHTS", insights)
       } else {
         setError("Neural network synchronization failed.")
+        console.error("Neural network synchronization failed.")
       }
     } catch (err) {
       console.error(err)
@@ -183,6 +266,41 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
+      {/* Wallet Connection UI */}
+      <div className="fixed top-4 right-4 z-50">
+        {ready && !authenticated ? (
+          <Button
+            onClick={login}
+            className="bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-black px-6 py-3 rounded-lg font-mono text-sm tracking-wide uppercase transition-all duration-300 border border-cyan-400/20 flex items-center gap-2"
+          >
+            <Wallet className="h-4 w-4" />
+            Connect Wallet
+          </Button>
+        ) : ready && authenticated && solanaWallet ? (
+          <div className="flex items-center gap-3">
+            <div className="bg-black/40 backdrop-blur-sm border border-white/10 px-4 py-3 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                <span className="text-white font-mono text-sm">
+                  {('address' in solanaWallet) && solanaWallet.address.slice(0, 4)}...{('address' in solanaWallet) && solanaWallet.address.slice(-4)}
+                </span>
+              </div>
+            </div>
+            <Button
+              onClick={logout}
+              variant="outline"
+              className="border-white/20 text-white hover:bg-white/10 bg-black/40 backdrop-blur-sm font-mono text-sm"
+            >
+              Disconnect
+            </Button>
+          </div>
+        ) : null}
+      </div>
+      
+      <div className="z-50">
+      {/* <InfoList/> */}
+      {/* <ActionButtonList/> */}
+      </div>
       {/* Futuristic Grid Background with Gradients - exactly like landing page */}
       <div className="absolute inset-0">
         {/* Radial gradients for depth */}

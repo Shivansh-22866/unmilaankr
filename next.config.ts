@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       new webpack.IgnorePlugin({ resourceRegExp: /^zlib-sync$/ }),
       new webpack.IgnorePlugin({ resourceRegExp: /^bufferutil$/ })
     );
+    config.externals.push('pino-pretty', 'lokijs', 'encoding')
     return config;
   }
 };
