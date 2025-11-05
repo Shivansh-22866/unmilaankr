@@ -32,6 +32,11 @@ import { ParticleSystem } from "../components/ParticleSystem"
 import { GestureInterface } from "../components/GestureInterface"
 import { XPremiumLoader } from "../components/XLoader"
 import type { PremiumTwitterMetrics } from "@/lib/data/twitter-premium"
+import { Provider } from "ethers"
+import { useAppKit, useAppKitAccount, useAppKitProvider } from "@reown/appkit/react"
+import { PublicKey, Transaction, VersionedTransaction, Connection } from '@solana/web3.js';
+import { createX402Client } from '@payai/x402-solana/client';
+import { modal } from "@/contexts"
 
 
 interface Tweet {
@@ -112,6 +117,10 @@ export default function XAnalytics() {
   const [metrics, setMetrics] = useState<PremiumTwitterMetrics | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  const {open} = useAppKit();
+  const {address, isConnected} = useAppKitAccount()
+  const {walletProvider} = useAppKitProvider<Provider>("solana")
+
   const searchParams = useSearchParams()
 
   useEffect(() => {
@@ -128,13 +137,35 @@ export default function XAnalytics() {
       return
     }
 
+    if(!isConnected || !walletProvider) {
+      setError("Please connect your wallet to run the analysis.")
+      open()
+      console.log("Please connect your wallet to run the analysis.")
+      return
+    }
+
     setLoading(true)
     setError(null)
 
     try {
-      const response = await fetch("/api/x-premium", {
+      const provider = modal.getWalletProvider() as any;
+      const address = modal.getAddress();
+      const chain = modal.getChainId();
+
+      const client = createX402Client({
+          wallet: {
+            publicKey: new PublicKey(address!),
+            signTransaction: async (tx) => {
+              const signed = await provider.signTransaction(tx);
+              return signed
+            }
+          },
+          network: 'solana',
+          rpcUrl: process.env.SOLANA_RPC_URL!,
+          maxPaymentAmount: BigInt(1_000_000_000_000_000), // 100,000 USDC in micro-units
+      });
+      const response = await client.fetch("/api/x-premium", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           handle: twitterHandle.replace("@", ""),
           tweetLimit: 40,

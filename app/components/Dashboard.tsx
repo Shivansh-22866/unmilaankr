@@ -172,6 +172,11 @@ export default function Dashboard() {
     router.push(`/github?url=${encodedUrl}`)
   }
 
+  const handleViewTwitterAnalytics = () => {
+    const encodedHandle = encodeURIComponent(projectConfig.twitterHandle || "")
+    router.push(`/x?handle=${encodedHandle}`)
+  }
+
   const handleViewOnchainAnalytics = () => {
     const encodedUrl = encodeURIComponent(projectConfig.contractAddress || "")
     router.push(`/onchain?address=${encodedUrl}`)
@@ -777,8 +782,8 @@ export default function Dashboard() {
                     value: score.social,
                     icon: <Twitter className="h-6 w-6" />,
                     color: "blue",
-                    action: null,
-                    actionLabel: "COMING SOON",
+                    action: () => handleViewTwitterAnalytics(),
+                    actionLabel: "View Analytics",
                   },
                   {
                     title: "ONCHAIN GROWTH",
