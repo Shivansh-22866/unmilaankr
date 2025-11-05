@@ -161,7 +161,7 @@ export default function XAnalytics() {
             }
           },
           network: 'solana',
-          rpcUrl: process.env.SOLANA_RPC_URL!,
+          rpcUrl: process.env.NEXT_PUBLIC_SOLANA_RPC_URL!,
           maxPaymentAmount: BigInt(1_000_000_000_000_000), // 100,000 USDC in micro-units
       });
       const response = await client.fetch("/api/x-premium", {

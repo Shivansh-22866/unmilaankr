@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       process.env.ETHERSCAN_API_KEY!,
       process.env.HELIUS_API_KEY, // Optional
       process.env.ALCHEMY_RPC_URL,
-      process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com"
+      process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com"
     )
 
     console.log(`Fetching metrics for ${chain} address: ${contractAddress}`)
