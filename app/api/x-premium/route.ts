@@ -2,13 +2,13 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { TwitterPremiumScraper, PremiumTwitterMetrics } from "@/lib/data/twitter-premium";
 
-import { X402PaymentHandler } from '@payai/x402-solana/server';
+// import { X402PaymentHandler } from '@payai/x402-solana/server';
 
-const x402 = new X402PaymentHandler({
-  network: 'solana',
-  treasuryAddress: "fiJ4qU5eTgdaFZi62haep2u3qweqKarqsLRk4XEX1Vf",
-  facilitatorUrl: 'https://facilitator.payai.network',
-});
+// const x402 = new X402PaymentHandler({
+//   network: 'solana',
+//   treasuryAddress: "fiJ4qU5eTgdaFZi62haep2u3qweqKarqsLRk4XEX1Vf",
+//   facilitatorUrl: 'https://facilitator.payai.network',
+// });
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,36 +21,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const paymentHeader = x402.extractPayment(request.headers);
+    // const paymentHeader = x402.extractPayment(request.headers);
 
-    const paymentRequirements = await x402.createPaymentRequirements({
-      price: {
-        amount: "1000000000",
-        asset: {
-          address: "K9uxt28GvfPsQuapLU1rYxY1REAcZ9NMQ3SYwWbcyai",
-          decimals: 9,
-        }
-      },
-      network: 'solana',
-      config: {
-        description: 'Momentum Agent Execution - Signiq',
-        resource: `https://signiq.xyz/api/x-premium`,
-      }
-    });
+    // const paymentRequirements = await x402.createPaymentRequirements({
+    //   price: {
+    //     amount: "1000000000",
+    //     asset: {
+    //       address: "K9uxt28GvfPsQuapLU1rYxY1REAcZ9NMQ3SYwWbcyai",
+    //       decimals: 9,
+    //     }
+    //   },
+    //   network: 'solana',
+    //   config: {
+    //     description: 'Momentum Agent Execution - Signiq',
+    //     resource: `https://signiq.xyz/api/x-premium`,
+    //   }
+    // });
 
-    if (!paymentHeader) {
-      // Return 402 with payment requirements
-      const response = x402.create402Response(paymentRequirements);
-      console.log("Returning 402 response", response);
-      return NextResponse.json(response.body, { status: response.status });
-    }
+    // if (!paymentHeader) {
+    //   // Return 402 with payment requirements
+    //   const response = x402.create402Response(paymentRequirements);
+    //   console.log("Returning 402 response", response);
+    //   return NextResponse.json(response.body, { status: response.status });
+    // }
 
-    // 3. Verify payment
-    const verified = await x402.verifyPayment(paymentHeader, paymentRequirements);
-    console.log("Payment verified", verified);
-    if (!verified) {
-      return NextResponse.json({ error: 'Invalid payment' }, { status: 402 });
-    }
+    // // 3. Verify payment
+    // const verified = await x402.verifyPayment(paymentHeader, paymentRequirements);
+    // console.log("Payment verified", verified);
+    // if (!verified) {
+    //   return NextResponse.json({ error: 'Invalid payment' }, { status: 402 });
+    // }
 
     // Validate tweetLimit and mentionLimit (ensuring they are reasonable)
     const validatedTweetLimit = tweetLimit && tweetLimit > 0 && tweetLimit <= 100 ? tweetLimit : 40;

@@ -783,7 +783,7 @@ export default function Dashboard() {
                     icon: <Twitter className="h-6 w-6" />,
                     color: "blue",
                     action: () => handleViewTwitterAnalytics(),
-                    actionLabel: "View Analytics",
+                    actionLabel: "VIEW ANALYTICS",
                   },
                   {
                     title: "ONCHAIN GROWTH",

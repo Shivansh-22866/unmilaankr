@@ -117,9 +117,9 @@ export default function XAnalytics() {
   const [metrics, setMetrics] = useState<PremiumTwitterMetrics | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const {open} = useAppKit();
-  const {address, isConnected} = useAppKitAccount()
-  const {walletProvider} = useAppKitProvider<Provider>("solana")
+  // const {open} = useAppKit();
+  // const {address, isConnected} = useAppKitAccount()
+  // const {walletProvider} = useAppKitProvider<Provider>("solana")
 
   const searchParams = useSearchParams()
 
@@ -137,34 +137,45 @@ export default function XAnalytics() {
       return
     }
 
-    if(!isConnected || !walletProvider) {
-      setError("Please connect your wallet to run the analysis.")
-      open()
-      console.log("Please connect your wallet to run the analysis.")
-      return
-    }
+    // if(!isConnected || !walletProvider) {
+    //   setError("Please connect your wallet to run the analysis.")
+    //   open()
+    //   console.log("Please connect your wallet to run the analysis.")
+    //   return
+    // }
 
     setLoading(true)
     setError(null)
 
     try {
-      const provider = modal.getWalletProvider() as any;
-      const address = modal.getAddress();
-      const chain = modal.getChainId();
+      // const provider = modal.getWalletProvider() as any;
+      // const address = modal.getAddress();
+      // const chain = modal.getChainId();
 
-      const client = createX402Client({
-          wallet: {
-            publicKey: new PublicKey(address!),
-            signTransaction: async (tx) => {
-              const signed = await provider.signTransaction(tx);
-              return signed
-            }
-          },
-          network: 'solana',
-          rpcUrl: process.env.NEXT_PUBLIC_SOLANA_RPC_URL!,
-          maxPaymentAmount: BigInt(1_000_000_000_000_000), // 100,000 USDC in micro-units
-      });
-      const response = await client.fetch("/api/x-premium", {
+      // const client = createX402Client({
+      //     wallet: {
+      //       publicKey: new PublicKey(address!),
+      //       signTransaction: async (tx) => {
+      //         const signed = await provider.signTransaction(tx);
+      //         return signed
+      //       }
+      //     },
+      //     network: 'solana',
+      //     rpcUrl: process.env.NEXT_PUBLIC_SOLANA_RPC_URL!,
+      //     maxPaymentAmount: BigInt(1_000_000_000_000_000), // 100,000 USDC in micro-units
+      // });
+      // const response = await client.fetch("/api/x-premium", {
+      //   method: "POST",
+      //   body: JSON.stringify({
+      //     handle: twitterHandle.replace("@", ""),
+      //     tweetLimit: 40,
+      //     mentionLimit: 40,
+      //     includeFollowersGrowth: true,
+      //     includeImpressions: true,
+      //   }),
+      // })
+
+      const response = await fetch("/api/x-premium", {
         method: "POST",
         body: JSON.stringify({
           handle: twitterHandle.replace("@", ""),
