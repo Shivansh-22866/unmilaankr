@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Twitter, Brain, Users, Zap, MessageCircle, TrendingUp } from "lucide-react"
+import { Twitter, Brain, Users, Zap, MessageCircle, TrendingUp, X } from "lucide-react"
 
 export function XPremiumLoader() {
   const stages = [
@@ -36,7 +36,6 @@ export function XPremiumLoader() {
         >
           <div className="flex justify-center mb-8">
             <motion.div
-              animate={{ rotate: 360 }}
               transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
               className="relative"
             >
