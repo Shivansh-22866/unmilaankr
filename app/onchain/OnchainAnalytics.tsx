@@ -16,20 +16,16 @@ import {
   DollarSign,
   Target,
   Zap,
-  Link2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { OnchainMetricsViz } from "@/app/components/OnchainMetricsViz"
-import { TokenHealthScore } from "@/app/components/TokenHealthScore"
-import { ParticleSystem } from "@/app/components/ParticleSystem"
-import { GestureInterface } from "@/app/components/GestureInterface"
-import type { OnchainMetrics } from "@/types/agent"
-import { generateOnchainInsight } from '@/lib/ai/onchainInsights'
-
+import { OnchainMetricsViz } from "../components/OnchainMetricsViz"
+import { TokenHealthScore } from "../components/TokenHealthScore"
+import { ParticleSystem } from "../components/ParticleSystem"
+import { GestureInterface } from "../components/GestureInterface"
 
 interface TokenInfo {
   name: string
@@ -50,12 +46,10 @@ interface DEXMetrics {
   totalVolume24h: number
 }
 
-type ChainType = 'ethereum' | 'solana' | 'unknown'
-
 export default function OnchainAnalytics() {
   const [contractAddress, setContractAddress] = useState("")
   const [loading, setLoading] = useState(false)
-  const [metrics, setMetrics] = useState<OnchainMetrics | null>(null)
+  const [metrics, setMetrics] = useState<any | null>(null)
   const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null)
   const [transactionHistory, setTransactionHistory] = useState<Array<{ date: string; count: number; volume: number }>>(
     [],
@@ -63,9 +57,10 @@ export default function OnchainAnalytics() {
   const [hourlyData, setHourlyData] = useState<Array<{ hour: number; count: number }>>([])
   const [dexMetrics, setDexMetrics] = useState<DEXMetrics | null>(null)
   const [topHolders, setTopHolders] = useState<Array<{ address: string; balance: string; percentage: number }>>([])
+  const [whaleActivity, setWhaleActivity] = useState<any>(null)
+  const [marketMakerAnalysis, setMarketMakerAnalysis] = useState<any>(null)
+  const [tradingRecommendation, setTradingRecommendation] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
-  const [insight, setInsight] = useState<Awaited<ReturnType<typeof generateOnchainInsight>> | null>(null)
-  const [detectedChain, setDetectedChain] = useState<ChainType>('unknown')
 
   const searchParams = useSearchParams()
 
@@ -79,31 +74,9 @@ export default function OnchainAnalytics() {
     }
   }, [searchParams])
 
-  // Detect chain type from address
-  const detectChainType = (address: string): ChainType => {
-    // Ethereum: 0x + 40 hex chars
-    if (/^0x[a-fA-F0-9]{40}$/.test(address)) {
-      return 'ethereum'
-    }
-    // Solana: Base58, 32-44 chars
-    if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)) {
-      return 'solana'
-    }
-    return 'unknown'
-  }
-
   const handleAnalyzeWithAddress = async (address: string) => {
     if (!address.trim()) {
-      setError("Please enter a valid contract address")
-      return
-    }
-
-    // Detect chain type
-    const chain = detectChainType(address)
-    setDetectedChain(chain)
-
-    if (chain === 'unknown') {
-      setError("Invalid address format. Please enter a valid Ethereum (0x...) or Solana address")
+      setError("Please enter a valid Ethereum contract address")
       return
     }
 
@@ -120,15 +93,15 @@ export default function OnchainAnalytics() {
       const data = await response.json()
 
       if (data.success) {
-        setMetrics(data.metrics)
+        setMetrics(data.basicMetrics)
         setTokenInfo(data.tokenInfo)
         setTransactionHistory(data.transactionHistory?.daily || [])
         setHourlyData(data.transactionHistory?.hourly || [])
         setDexMetrics(data.dexMetrics)
         setTopHolders(data.topHolders || [])
-        const aiInsight = await generateOnchainInsight(data.metrics)
-        setInsight(aiInsight)
-
+        setWhaleActivity(data.whaleActivity || null)
+        setMarketMakerAnalysis(data.marketMakerAnalysis || null)
+        setTradingRecommendation(data.tradingRecommendation || null)
       } else {
         setError(data.error || "Failed to fetch onchain metrics")
       }
@@ -152,36 +125,11 @@ export default function OnchainAnalytics() {
   }
 
   const formatAddress = (address: string) => {
-    if (address.length > 40) {
-      // Solana address (longer)
-      return `${address.slice(0, 8)}...${address.slice(-6)}`
-    }
-    // Ethereum address
     return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
 
-  const getExplorerUrl = (address: string, chain: ChainType) => {
-    if (chain === 'ethereum') {
-      return `https://etherscan.io/token/${address}`
-    } else if (chain === 'solana') {
-      return `https://solscan.io/token/${address}`
-    }
-    return '#'
-  }
-
-  const getChainBadgeColor = (chain: ChainType) => {
-    switch (chain) {
-      case 'ethereum':
-        return 'border-blue-500/50 text-blue-400 bg-blue-500/10'
-      case 'solana':
-        return 'border-purple-500/50 text-purple-400 bg-purple-500/10'
-      default:
-        return 'border-gray-500/50 text-gray-400 bg-gray-500/10'
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-black relative overflow-hidden dark">
+    <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Particle System Background */}
       <ParticleSystem />
 
@@ -251,7 +199,7 @@ export default function OnchainAnalytics() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5, duration: 1 }}
             >
-              Multi-Chain Intelligence • Ethereum & Solana • Real-time Token Analytics
+              Advanced Blockchain Intelligence • Real-time Token Analytics • DeFi Insights
             </motion.p>
           </motion.div>
 
@@ -262,38 +210,24 @@ export default function OnchainAnalytics() {
             transition={{ delay: 0.3, duration: 0.8 }}
             className="mb-12"
           >
-            <Card className="bg-black/60 backdrop-blur-md border border-green-500/30 shadow-2xl">
+            <Card className="!bg-black/60 backdrop-blur-md border border-green-500/30 shadow-2xl">
               <CardHeader className="border-b border-green-500/20">
                 <CardTitle className="text-2xl text-white font-mono flex items-center">
                   <Search className="h-6 w-6 mr-3 text-green-400" />
-                  MULTI-CHAIN ANALYZER
+                  CONTRACT ANALYZER
                 </CardTitle>
-                <p className="text-gray-400 text-sm mt-2">
-                  Supports Ethereum (0x...) and Solana addresses
-                </p>
               </CardHeader>
               <CardContent className="p-8">
                 <div className="flex space-x-4">
                   <div className="flex-1">
                     <Input
                       type="text"
-                      placeholder="Enter contract address (Ethereum: 0x... | Solana: base58)"
+                      placeholder="Enter Ethereum contract address (e.g., 0x...)"
                       value={contractAddress}
-                      onChange={(e) => {
-                        setContractAddress(e.target.value)
-                        setDetectedChain(detectChainType(e.target.value))
-                      }}
-                      className="bg-black/40 border-green-500/30 text-white placeholder-gray-400 text-lg py-6 font-mono"
+                      onChange={(e) => setContractAddress(e.target.value)}
+                      className="!bg-black/40 border-green-500/30 text-white placeholder-gray-400 text-lg py-6 font-mono"
                       onKeyPress={(e) => e.key === "Enter" && handleAnalyze()}
                     />
-                    {contractAddress && detectedChain !== 'unknown' && (
-                      <div className="mt-2">
-                        <Badge className={`${getChainBadgeColor(detectedChain)} px-3 py-1`}>
-                          {detectedChain === 'ethereum' && '🔷 Ethereum'}
-                          {detectedChain === 'solana' && '🟣 Solana'}
-                        </Badge>
-                      </div>
-                    )}
                   </div>
                   <Button
                     onClick={handleAnalyze}
@@ -343,33 +277,17 @@ export default function OnchainAnalytics() {
                 className="space-y-8"
               >
                 {/* Token Info Header */}
-                <Card className="bg-black/60 backdrop-blur-md border border-blue-500/30 shadow-2xl">
+                <Card className="!bg-black/60 backdrop-blur-md border border-blue-500/30 shadow-2xl">
                   <CardHeader className="border-b border-blue-500/20">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <Coins className="h-8 w-8 text-blue-400" />
                         <div>
-                          <div className="flex items-center space-x-3">
-                            <CardTitle className="text-3xl text-white font-mono">
-                              {tokenInfo ? `${tokenInfo.name} (${tokenInfo.symbol})` : formatAddress(contractAddress)}
-                            </CardTitle>
-                            <Badge className={getChainBadgeColor(detectedChain)}>
-                              {detectedChain === 'ethereum' && '🔷 ETH'}
-                              {detectedChain === 'solana' && '🟣 SOL'}
-                            </Badge>
-                          </div>
+                          <CardTitle className="text-3xl text-white font-mono">
+                            {tokenInfo ? `${tokenInfo.name} (${tokenInfo.symbol})` : formatAddress(contractAddress)}
+                          </CardTitle>
                           <p className="text-gray-400 text-lg">Onchain Analysis Complete</p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <p className="text-gray-500 text-sm font-mono">{contractAddress}</p>
-                            <a
-                              href={getExplorerUrl(contractAddress, detectedChain)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-400 hover:text-blue-300 transition-colors"
-                            >
-                              <Link2 className="h-4 w-4" />
-                            </a>
-                          </div>
+                          <p className="text-gray-500 text-sm font-mono">{contractAddress}</p>
                         </div>
                       </div>
                       <Badge variant="outline" className="border-green-500/50 text-green-400 bg-green-500/10 px-4 py-2">
@@ -383,7 +301,7 @@ export default function OnchainAnalytics() {
                 {/* Main Metrics Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Health Score */}
-                  <Card className="bg-black/60 backdrop-blur-md border border-green-500/30 shadow-2xl">
+                  <Card className="!bg-black/60 backdrop-blur-md border border-green-500/30 shadow-2xl">
                     <CardHeader className="border-b border-green-500/20">
                       <CardTitle className="text-xl text-white font-mono flex items-center">
                         <TrendingUp className="h-5 w-5 mr-2 text-green-400" />
@@ -455,7 +373,7 @@ export default function OnchainAnalytics() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 * index, duration: 0.5 }}
                       >
-                        <Card className={`bg-black/60 backdrop-blur-md border ${metric.borderColor} shadow-xl`}>
+                        <Card className={`!bg-black/60 backdrop-blur-md border ${metric.borderColor} shadow-xl`}>
                           <CardContent className="p-6">
                             <div className={`p-3 rounded-lg bg-gradient-to-br ${metric.bgColor} mb-4`}>
                               <metric.icon className={`h-6 w-6 ${metric.color}`} />
@@ -477,7 +395,7 @@ export default function OnchainAnalytics() {
                 </div>
 
                 {/* Visualization */}
-                <Card className="bg-black/60 backdrop-blur-md border border-green-500/30 shadow-2xl">
+                <Card className="!bg-black/60 backdrop-blur-md border border-green-500/30 shadow-2xl">
                   <CardHeader className="border-b border-green-500/20">
                     <CardTitle className="text-xl text-white font-mono flex items-center">
                       <Activity className="h-5 w-5 mr-2 text-green-400" />
@@ -499,7 +417,7 @@ export default function OnchainAnalytics() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* DEX Metrics */}
                   {dexMetrics && (
-                    <Card className="bg-black/60 backdrop-blur-md border border-purple-500/30 shadow-2xl">
+                    <Card className="!bg-black/60 backdrop-blur-md border border-purple-500/30 shadow-2xl">
                       <CardHeader className="border-b border-purple-500/20">
                         <CardTitle className="text-xl text-white font-mono flex items-center">
                           <DollarSign className="h-5 w-5 mr-2 text-purple-400" />
@@ -537,7 +455,7 @@ export default function OnchainAnalytics() {
                   )}
 
                   {/* Top Holders */}
-                  <Card className="bg-black/60 backdrop-blur-md border border-cyan-500/30 shadow-2xl">
+                  <Card className="!bg-black/60 backdrop-blur-md border border-cyan-500/30 shadow-2xl">
                     <CardHeader className="border-b border-cyan-500/20">
                       <CardTitle className="text-xl text-white font-mono flex items-center">
                         <Users className="h-5 w-5 mr-2 text-cyan-400" />
@@ -570,9 +488,179 @@ export default function OnchainAnalytics() {
                   </Card>
                 </div>
 
+                {/* Trading Recommendation */}
+                {tradingRecommendation && (
+                  <Card className="!bg-black/60 backdrop-blur-md border border-blue-500/30 shadow-2xl">
+                    <CardHeader className="border-b border-blue-500/20">
+                      <CardTitle className="text-xl text-white font-mono flex items-center">
+                        <Zap className="h-5 w-5 mr-2 text-blue-400" />
+                        TRADING RECOMMENDATION
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-400">Opportunity Score</span>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-48 h-2 bg-gray-700 rounded-full overflow-hidden">
+                              <motion.div
+                                className="h-full bg-gradient-to-r from-blue-400 to-cyan-400"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${tradingRecommendation.score}%` }}
+                                transition={{ duration: 1, ease: "easeOut" }}
+                              />
+                            </div>
+                            <span className="text-blue-400 font-mono font-bold">{tradingRecommendation.score}/100</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-400">Risk Level</span>
+                          <Badge
+                            variant="outline"
+                            className={`${
+                              tradingRecommendation.risk === "critical"
+                                ? "border-red-500/50 text-red-400 bg-red-500/10"
+                                : tradingRecommendation.risk === "high"
+                                  ? "border-orange-500/50 text-orange-400 bg-orange-500/10"
+                                  : tradingRecommendation.risk === "medium"
+                                    ? "border-yellow-500/50 text-yellow-400 bg-yellow-500/10"
+                                    : "border-green-500/50 text-green-400 bg-green-500/10"
+                            }`}
+                          >
+                            {tradingRecommendation.risk.toUpperCase()}
+                          </Badge>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-400">Sentiment</span>
+                          <Badge
+                            variant="outline"
+                            className={`${
+                              tradingRecommendation.sentiment === "bullish"
+                                ? "border-green-500/50 text-green-400 bg-green-500/10"
+                                : tradingRecommendation.sentiment === "bearish"
+                                  ? "border-red-500/50 text-red-400 bg-red-500/10"
+                                  : "border-gray-500/50 text-gray-400 bg-gray-500/10"
+                            }`}
+                          >
+                            {tradingRecommendation.sentiment.toUpperCase()}
+                          </Badge>
+                        </div>
+
+                        {tradingRecommendation.keyPoints && tradingRecommendation.keyPoints.length > 0 && (
+                          <div className="pt-4 border-t border-gray-700">
+                            <p className="text-sm text-gray-400 mb-2 uppercase tracking-wider">Key Points</p>
+                            <ul className="space-y-1">
+                              {tradingRecommendation.keyPoints.map((point: string, index: number) => (
+                                <li key={index} className="text-gray-300 text-sm flex items-start">
+                                  <TrendingUp className="h-4 w-4 mr-2 text-green-400 mt-0.5 flex-shrink-0" />
+                                  {point}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {tradingRecommendation.warnings && tradingRecommendation.warnings.length > 0 && (
+                          <div className="pt-4 border-t border-gray-700">
+                            <p className="text-sm text-gray-400 mb-2 uppercase tracking-wider">Warnings</p>
+                            <ul className="space-y-1">
+                              {tradingRecommendation.warnings.map((warning: string, index: number) => (
+                                <li key={index} className="text-red-300 text-sm flex items-start">
+                                  <Target className="h-4 w-4 mr-2 text-red-400 mt-0.5 flex-shrink-0" />
+                                  {warning}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Whale Activity */}
+                {whaleActivity && (
+                  <Card className="!bg-black/60 backdrop-blur-md border border-purple-500/30 shadow-2xl">
+                    <CardHeader className="border-b border-purple-500/20">
+                      <CardTitle className="text-xl text-white font-mono flex items-center">
+                        <Wallet className="h-5 w-5 mr-2 text-purple-400" />
+                        WHALE ACTIVITY
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <div className="space-y-3">
+                        {whaleActivity.recentMovements &&
+                          whaleActivity.recentMovements.slice(0, 10).map((movement: any, index: number) => (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg"
+                            >
+                              <div className="flex items-center space-x-3 flex-1">
+                                <div
+                                  className={`w-3 h-3 rounded-full ${
+                                    movement.type === "buy" ? "bg-green-400" : "bg-red-400"
+                                  }`}
+                                />
+                                <div>
+                                  <p className="text-white font-mono text-sm">{formatAddress(movement.address)}</p>
+                                  <p className="text-gray-500 text-xs">
+                                    {movement.type === "buy" ? "Buying" : "Selling"} {formatNumber(movement.amount)}{" "}
+                                    tokens
+                                  </p>
+                                </div>
+                              </div>
+                              <span
+                                className={`font-mono font-bold ${movement.type === "buy" ? "text-green-400" : "text-red-400"}`}
+                              >
+                                {movement.type === "buy" ? "+" : "-"}${formatNumber(movement.valueUSD)}
+                              </span>
+                            </div>
+                          ))}
+                        {(!whaleActivity.recentMovements || whaleActivity.recentMovements.length === 0) && (
+                          <p className="text-gray-500 text-center py-4">No recent whale activity detected</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Market Maker Analysis */}
+                {marketMakerAnalysis && (
+                  <Card className="!bg-black/60 backdrop-blur-md border border-pink-500/30 shadow-2xl">
+                    <CardHeader className="border-b border-pink-500/20">
+                      <CardTitle className="text-xl text-white font-mono flex items-center">
+                        <BarChart3 className="h-5 w-5 mr-2 text-pink-400" />
+                        MARKET MAKER ANALYSIS
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Detected Market Makers</span>
+                          <span className="text-pink-400 font-mono">
+                            {marketMakerAnalysis.mmAddresses ? marketMakerAnalysis.mmAddresses.length : 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Liquidity Provision</span>
+                          <span className="text-pink-400 font-mono">
+                            ${formatNumber(marketMakerAnalysis.totalLiquidity || 0)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Spread Analysis</span>
+                          <span className="text-pink-400 font-mono">{marketMakerAnalysis.averageSpread || "N/A"}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Token Information */}
                 {tokenInfo && (
-                  <Card className="bg-black/60 backdrop-blur-md border border-yellow-500/30 shadow-2xl">
+                  <Card className="!bg-black/60 backdrop-blur-md border border-yellow-500/30 shadow-2xl">
                     <CardHeader className="border-b border-yellow-500/20">
                       <CardTitle className="text-xl text-white font-mono flex items-center">
                         <Coins className="h-5 w-5 mr-2 text-yellow-400" />
@@ -599,29 +687,6 @@ export default function OnchainAnalytics() {
                             {formatNumber(Number.parseFloat(tokenInfo.totalSupply))}
                           </p>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* AI Insights */}
-                {insight && (
-                  <Card className="bg-black/60 backdrop-blur-md border border-yellow-500/30 shadow-2xl">
-                    <CardHeader className="border-b border-yellow-500/20">
-                      <CardTitle className="text-xl text-white font-mono">💡 AI INSIGHTS</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6 text-gray-300 font-mono space-y-4 text-sm">
-                      <p><strong>📌 Summary:</strong> {insight.summary}</p>
-                      <p><strong>📈 Outlook:</strong> <span className="text-green-400">{insight.outlook}</span></p>
-                      <p><strong>⚠️ Risk Level:</strong> <span className="text-red-400">{insight.riskLevel}</span></p>
-                      <p><strong>💬 Reason:</strong> {insight.reason}</p>
-                      <div>
-                        <p className="font-bold mb-1">🔍 Key Signals:</p>
-                        <ul className="list-disc list-inside text-gray-400">
-                          {insight.keySignals.map((signal, index) => (
-                            <li key={index}>{signal}</li>
-                          ))}
-                        </ul>
                       </div>
                     </CardContent>
                   </Card>

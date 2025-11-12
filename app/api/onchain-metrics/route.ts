@@ -1,9 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { 
-  OnchainDataFetcher, 
-  detectChain, 
-  isValidEthereumAddress, 
-  isValidSolanaAddress 
+import {
+  OnchainDataFetcher,
+  detectChain,
+  isValidEthereumAddress,
+  isValidSolanaAddress
 } from "@/lib/data/onchain"
 
 export async function POST(request: NextRequest) {
@@ -19,10 +19,10 @@ export async function POST(request: NextRequest) {
 
     if (!chain) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: "Invalid address format. Must be a valid Ethereum (0x...) or Solana address" 
-        }, 
+        {
+          success: false,
+          error: "Invalid address format. Must be a valid Ethereum (0x...) or Solana address"
+        },
         { status: 400 }
       )
     }
@@ -44,26 +44,19 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com"
     )
 
-    console.log(`Fetching metrics for ${chain} address: ${contractAddress}`)
+    console.log(`Fetching comprehensive analysis for ${chain} address: ${contractAddress}`)
 
-    // Fetch all core data concurrently
-    const [metrics, transactionHistory, dexMetrics, tokenInfo, topHolders] = await Promise.all([
-      onchainFetcher.fetchTokenMetrics(contractAddress),
-      onchainFetcher.fetchTransactionHistory(contractAddress, 30),
-      onchainFetcher.fetchDEXMetrics(contractAddress),
-      onchainFetcher.fetchTokenInfo(contractAddress),
-      onchainFetcher.fetchTopHolders(contractAddress, 10)
-    ])
+    // --- MODIFIED SECTION ---
+    // Instead of 5 parallel calls, we make one call to the comprehensive method.
+    // This method handles all the individual fetching and analysis internally.
+    const analysis = await onchainFetcher.getComprehensiveAnalysis(contractAddress)
 
     return NextResponse.json({
       success: true,
       chain,
-      tokenInfo,
-      metrics,
-      transactionHistory,
-      dexMetrics,
-      topHolders
+      ...analysis // Spread the entire analysis object into the response
     })
+    // --- END MODIFIED SECTION ---
 
   } catch (error) {
     console.error("Error fetching onchain metrics:", error)
