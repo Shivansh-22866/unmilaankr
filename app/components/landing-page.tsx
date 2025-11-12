@@ -30,6 +30,7 @@ import {
   Key,
   Wallet,
   Vote,
+  Copy,
 } from "lucide-react";
 import Logo from "@/app/assets/images/logo.png";
 import BuilderDashboard from "@/app/assets/images/builder-dashboard.png"
@@ -38,6 +39,7 @@ import ProjectIntelligence from "@/app/assets/images/project-intelligence.png"
 import CommunityPulse from "@/app/assets/images/community-pulse.png"
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner"
 
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState(false);
@@ -351,6 +353,13 @@ const roadmapPhases = [
     );
   };
 
+
+  const handleCopy = () => {
+    const contractAddress = "K9uxt28GvfPsQuapLU1rYxY1REAcZ9NMQ3SYwWbcyai"
+    navigator.clipboard.writeText(contractAddress)
+    toast("Contract address copied to clipboard!")
+  }
+
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden font-mono">
       {/* Dynamic Background */}
@@ -591,10 +600,18 @@ const roadmapPhases = [
                 : "opacity-0 translate-y-10"
             }`}
           >
-            <div className="text-center mb-16">
+            <div className="text-center mb-16 flex flex-col items-center justify-center">
               <Badge className="mb-8 bg-cyan-500/10 text-cyan-300 border-cyan-500/20 px-6 py-2 text-sm font-light tracking-wider">
                 <Layers className="w-4 h-4 mr-2" />
                 DECENTRALIZED MOMENTUM INTELLIGENCE
+              </Badge>
+
+              <Badge
+                onClick={handleCopy}
+                className="mb-8 cursor-pointer !bg-emerald-500/10 !text-emerald-300 !border-emerald-500/20 px-6 py-2 text-sm font-light tracking-wider flex items-center hover:!bg-emerald-300/50 hover:!border-emerald-500/50 hover:!text-white transition-colors"
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                K9uxt...cyai
               </Badge>
 
               <h1 className="text-6xl lg:text-8xl font-extralight mb-12 leading-tight tracking-tight">
