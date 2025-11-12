@@ -1,7 +1,8 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ethers } from "ethers";
 import {
   Github,
   Twitter,
@@ -18,35 +19,37 @@ import {
   Zap,
   TrendingUp,
   BarChart3,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { HolographicDataCube } from "./DataCube"
-import { AudioVisualizer } from "./AudiVisualizer"
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { HolographicDataCube } from "./DataCube";
+import { AudioVisualizer } from "./AudiVisualizer";
 import type {
   MomentumScore,
   AnomalyAlert as AlertType,
   ProjectConfig,
   TimeSeriesAllPoint,
   AIinsights,
-} from "@/types/agent"
-import { MomentumTimeSeries } from "./MomentumTimeSeries"
-import { AIInsightsDisplay } from "./AIInsightsDisplay"
-import { useRouter } from "next/navigation"
+} from "@/types/agent";
+import { MomentumTimeSeries } from "./MomentumTimeSeries";
+import { AIInsightsDisplay } from "./AIInsightsDisplay";
+import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [score, setScore] = useState<MomentumScore | null>(null)
-  const [alerts, setAlerts] = useState<AlertType[]>([])
-  const [breakDown, setBreakDown] = useState<TimeSeriesAllPoint[]>([])
-  const [githubWeight, setGithubWeight] = useState(0.25)
-  const [twitterWeight, setTwitterWeight] = useState(0.35)
-  const [onchainWeight, setOnchainWeight] = useState(0.1)
-  const [communityWeight, setCommunityWeight] = useState(0.15)
-  const [previousScore, setPreviousScore] = useState<MomentumScore | null>(null)
-  const [scoreDelta, setScoreDelta] = useState<number | null>(null)
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [score, setScore] = useState<MomentumScore | null>(null);
+  const [alerts, setAlerts] = useState<AlertType[]>([]);
+  const [breakDown, setBreakDown] = useState<TimeSeriesAllPoint[]>([]);
+  const [githubWeight, setGithubWeight] = useState(0.25);
+  const [twitterWeight, setTwitterWeight] = useState(0.35);
+  const [onchainWeight, setOnchainWeight] = useState(0.1);
+  const [communityWeight, setCommunityWeight] = useState(0.15);
+  const [previousScore, setPreviousScore] = useState<MomentumScore | null>(
+    null
+  );
+  const [scoreDelta, setScoreDelta] = useState<number | null>(null);
   const [insights, setInsights] = useState<AIinsights>({
     summary: "",
     outlook: "neutral",
@@ -71,62 +74,155 @@ export default function Dashboard() {
       rankPercentile: 0,
       outperformingSignals: [],
     },
-  })
-  const [aiProcessing, setAiProcessing] = useState(false)
-  const [, setError] = useState<string | null>(null)
-  const [isInitialized, setIsInitialized] = useState(false)
-  const [currentTime, setCurrentTime] = useState(new Date())
+  });
+  const [aiProcessing, setAiProcessing] = useState(false);
+  const [, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [projectConfig, setProjectConfig] = useState<ProjectConfig>({
-    name: "Lens Protocol",
+    name: "Token Name",
     githubRepo: "",
     twitterHandle: "",
     contractAddress: "",
-    tokenSymbol: "LENS",
+    tokenSymbol: "",
     discord: {
       serverId: "",
       channelId: "",
     },
-  })
+  });
 
-  const totalWeight = githubWeight + twitterWeight + onchainWeight + communityWeight
+  const TOKENLIST_SOLANA_RAW =
+    "https://raw.githubusercontent.com/solana-labs/token-list/main/src/tokens/solana.tokenlist.json";
 
-  const normalizeWeights = () => {
-    const total = totalWeight > 0 ? totalWeight : 1
-    setGithubWeight((v) => v / total)
-    setTwitterWeight((v) => v / total)
-    setOnchainWeight((v) => v / total)
-    setCommunityWeight((v) => v / total)
-  }
+  const isEthereumAddress = (addr?: string) =>
+    !!addr && /^0x[a-fA-F0-9]{40}$/.test(addr.trim());
 
-  const resetWeights = () => {
-    setGithubWeight(0.25)
-    setTwitterWeight(0.35)
-    setOnchainWeight(0.1)
-    setCommunityWeight(0.15)
-  }
+  const isSolanaAddress = (addr?: string) =>
+    !!addr && /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(addr.trim());
 
+  // Resolve token symbol from a contract/mint address (Ethereum or Solana)
+  const resolveTokenDetails = async (address: string) => {
+    const addr = address.trim();
+    if (!addr) return { name: null, symbol: null, twitterHandle: null };
+
+    try {
+      // --- Ethereum / EVM tokens ---
+      if (isEthereumAddress(addr)) {
+        // Optional: Add ethers.js logic for ERC-20 metadata if needed
+        return { name: null, symbol: null, twitterHandle: null };
+      }
+
+      // --- Solana tokens ---
+      if (isSolanaAddress(addr)) {
+        console.log("Resolving Solana token details for", addr);
+        try {
+          const res = await fetch(TOKENLIST_SOLANA_RAW);
+          if (res.ok) {
+            const json = await res.json();
+            const token = (json.tokens || []).find(
+              (t: any) => t.address?.toLowerCase() === addr.toLowerCase()
+            );
+
+            if (token) {
+              let twitterHandle = token.extensions?.twitter ?? null;
+              if (twitterHandle) {
+                // Remove prefix like "https://twitter.com/" or "@"
+                twitterHandle = twitterHandle
+                  .replace(/^https?:\/\/(www\.)?twitter\.com\//i, "")
+                  .replace(/^@/, "")
+                  .trim();
+              }
+              return {
+                name: token.name || null,
+                symbol: token.symbol || null,
+                twitterHandle: twitterHandle, // use the cleaned twitter handle
+              };
+            }
+          }
+        } catch (e) {
+          console.warn("Solana token list lookup failed", e);
+        }
+      }
+    } catch (e) {
+      console.warn("resolveTokenDetails error", e);
+    }
+
+    // --- Fallback ---
+    return {
+      name: addr.length > 8 ? `${addr.slice(0, 4)}...${addr.slice(-4)}` : addr,
+      symbol: null,
+      twitterHandle: null,
+    };
+  };
+
+  // ⚡ Auto-populate token symbol, twitter handle, and name when contract address changes
   useEffect(() => {
-    const timer = setTimeout(() => setIsInitialized(true), 1000)
-    const timeInterval = setInterval(() => setCurrentTime(new Date()), 1000)
+    let cancelled = false;
+    if (!projectConfig.contractAddress) return;
+
+    const deb = setTimeout(async () => {
+      try {
+        const { name, symbol, twitterHandle } = await resolveTokenDetails(
+          projectConfig.contractAddress!
+        );
+        if (!cancelled) {
+          setProjectConfig((prev) => ({
+            ...prev,
+            name: name ?? prev.name,
+            tokenSymbol: symbol ?? prev.tokenSymbol,
+            twitterHandle: twitterHandle ?? prev.twitterHandle,
+          }));
+        }
+      } catch (e) {
+        console.warn("auto-resolve token details failed", e);
+      }
+    }, 500); // debounce
 
     return () => {
-      clearTimeout(timer)
-      clearInterval(timeInterval)
-    }
-  }, [])
+      cancelled = true;
+      clearTimeout(deb);
+    };
+  }, [projectConfig.contractAddress]);
+  const totalWeight =
+    githubWeight + twitterWeight + onchainWeight + communityWeight;
+
+  const normalizeWeights = () => {
+    const total = totalWeight > 0 ? totalWeight : 1;
+    setGithubWeight((v) => v / total);
+    setTwitterWeight((v) => v / total);
+    setOnchainWeight((v) => v / total);
+    setCommunityWeight((v) => v / total);
+  };
+
+  const resetWeights = () => {
+    setGithubWeight(0.25);
+    setTwitterWeight(0.35);
+    setOnchainWeight(0.1);
+    setCommunityWeight(0.15);
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsInitialized(true), 1000);
+    const timeInterval = setInterval(() => setCurrentTime(new Date()), 1000);
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(timeInterval);
+    };
+  }, []);
 
   const handleRunAgent = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
-      setAiProcessing(true)
-      setPreviousScore(score)
+      setAiProcessing(true);
+      setPreviousScore(score);
       const normalizedWeights = {
         github: githubWeight,
         twitter: twitterWeight,
         onchain: onchainWeight,
         community: communityWeight,
-      }
+      };
 
       const res = await fetch("/api/agent", {
         method: "POST",
@@ -138,53 +234,55 @@ export default function Dashboard() {
           anomalyThreshold: 2.5,
           weights: normalizedWeights,
         }),
-      })
+      });
 
-      const json = await res.json()
+      const json = await res.json();
       if (json.status === "ok") {
-        console.log(json)
-        setAiProcessing(false)
-        setBreakDown(json.breakdown)
-        setScore(json.score)
-        setAlerts(json.alerts)
-        setInsights(json.aiInput)
+        console.log(json);
+        setAiProcessing(false);
+        setBreakDown(json.breakdown);
+        setScore(json.score);
+        setAlerts(json.alerts);
+        setInsights(json.aiInput);
         if (previousScore && json.score) {
-          const delta = json.score.overall - previousScore.overall
-          setScoreDelta(delta)
+          const delta = json.score.overall - previousScore.overall;
+          setScoreDelta(delta);
         } else {
-          setScoreDelta(null)
+          setScoreDelta(null);
         }
-        console.log("AI INSIGHTS", insights)
+        console.log("AI INSIGHTS", insights);
       } else {
-        setError("Neural network synchronization failed.")
+        setError("Neural network synchronization failed.");
       }
     } catch (err) {
-      console.error(err)
-      setError("Quantum entanglement disrupted. Recalibrating...")
+      console.error(err);
+      setError("Quantum entanglement disrupted. Recalibrating...");
     } finally {
-      setLoading(false)
-      setAiProcessing(false)
+      setLoading(false);
+      setAiProcessing(false);
     }
-  }
+  };
 
   const handleViewGitHubAnalytics = () => {
-    const encodedUrl = encodeURIComponent(projectConfig.githubRepo || "")
-    router.push(`/github?url=${encodedUrl}`)
-  }
+    const encodedUrl = encodeURIComponent(projectConfig.githubRepo || "");
+    router.push(`/github?url=${encodedUrl}`);
+  };
 
   const handleViewTwitterAnalytics = () => {
-    const encodedHandle = encodeURIComponent(projectConfig.twitterHandle || "")
-    router.push(`/x?handle=${encodedHandle}`)
-  }
+    const encodedHandle = encodeURIComponent(projectConfig.twitterHandle || "");
+    router.push(`/x?handle=${encodedHandle}`);
+  };
 
   const handleViewOnchainAnalytics = () => {
-    const encodedUrl = encodeURIComponent(projectConfig.contractAddress || "")
-    router.push(`/onchain?address=${encodedUrl}`)
-  }
+    const encodedUrl = encodeURIComponent(projectConfig.contractAddress || "");
+    router.push(`/onchain?address=${encodedUrl}`);
+  };
 
   const handleDiscordAnalytics = () => {
-    router.push(`/discord?server=${projectConfig.discord?.serverId}&channel=${projectConfig.discord?.channelId}`)
-  }
+    router.push(
+      `/discord?server=${projectConfig.discord?.serverId}&channel=${projectConfig.discord?.channelId}`
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
@@ -273,7 +371,9 @@ export default function Dashboard() {
                 transition={{ delay: 0.4, duration: 0.8 }}
               >
                 SIGNIQ
-                <span className="block text-4xl md:text-5xl text-cyan-400 font-mono mt-4">DASHBOARD</span>
+                <span className="block text-4xl md:text-5xl text-cyan-400 font-mono mt-4">
+                  DASHBOARD
+                </span>
               </motion.h1>
 
               <motion.p
@@ -282,7 +382,8 @@ export default function Dashboard() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6, duration: 0.8 }}
               >
-                Real-time Web3 intelligence • Multi-modal signal processing • Predictive momentum analysis
+                Real-time Web3 intelligence • Multi-modal signal processing •
+                Predictive momentum analysis
               </motion.p>
 
               {/* Clean Status Bar */}
@@ -301,7 +402,9 @@ export default function Dashboard() {
                   <span className="font-mono">CONNECTED</span>
                 </div>
                 <div className="flex items-center space-x-2 text-gray-400">
-                  <span className="font-mono">{currentTime.toLocaleTimeString()}</span>
+                  <span className="font-mono">
+                    {currentTime.toLocaleTimeString()}
+                  </span>
                 </div>
               </motion.div>
             </motion.div>
@@ -323,8 +426,12 @@ export default function Dashboard() {
                     <Target className="h-6 w-6 text-cyan-400" />
                   </div>
                   <div>
-                    <CardTitle className="text-2xl text-white font-light">{projectConfig.name}</CardTitle>
-                    <p className="text-gray-400 font-mono text-sm">PROJECT CONFIGURATION</p>
+                    <CardTitle className="text-2xl text-white font-light">
+                      {projectConfig.name}
+                    </CardTitle>
+                    <p className="text-gray-400 font-mono text-sm">
+                      PROJECT CONFIGURATION
+                    </p>
                   </div>
                 </div>
                 <div className="flex space-x-3">
@@ -343,11 +450,11 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
                   {
-                    icon: Github,
-                    label: "GitHub Repository",
-                    field: "githubRepo",
-                    value: projectConfig.githubRepo,
-                    placeholder: "GitHub repository URL",
+                    icon: Layers,
+                    label: "Contract Address",
+                    field: "contractAddress",
+                    value: projectConfig.contractAddress,
+                    placeholder: "Smart contract address",
                   },
                   {
                     icon: Twitter,
@@ -357,18 +464,11 @@ export default function Dashboard() {
                     placeholder: "Twitter username",
                   },
                   {
-                    icon: Layers,
-                    label: "Contract Address",
-                    field: "contractAddress",
-                    value: projectConfig.contractAddress,
-                    placeholder: "Smart contract address",
-                  },
-                  {
-                    icon: Cpu,
-                    label: "Token Symbol",
-                    field: "tokenSymbol",
-                    value: projectConfig.tokenSymbol,
-                    placeholder: "Token symbol",
+                    icon: Github,
+                    label: "GitHub Repository",
+                    field: "githubRepo",
+                    value: projectConfig.githubRepo,
+                    placeholder: "GitHub repository URL",
                   },
                 ].map((item, index) => (
                   <motion.div
@@ -397,6 +497,30 @@ export default function Dashboard() {
                   </motion.div>
                 ))}
 
+                <motion.div
+                  className="space-y-3"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.0, duration: 0.6 }}
+                >
+                  <label className="flex items-center space-x-2 text-sm font-mono text-gray-300 uppercase tracking-wide">
+                    <Target className="h-4 w-4 text-cyan-400" />
+                    <span>Token Symbol</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={projectConfig.tokenSymbol}
+                    onChange={(e) =>
+                      setProjectConfig((prev) => ({
+                        ...prev,
+                        tokenSymbol: e.target.value,
+                      }))
+                    }
+                    className="w-full px-4 py-3 !bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-200 font-mono"
+                    placeholder="Token symbol (auto-filled from contract address)"
+                  />
+                </motion.div>
+
                 {/* Discord Configuration */}
                 <motion.div
                   className="space-y-3"
@@ -416,19 +540,19 @@ export default function Dashboard() {
                     placeholder="Discord channel URL"
                     className="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all duration-200 font-mono"
                     onChange={(e) => {
-                      const input = e.target.value
-                      const match = input.match(/channels\/(\d+)\/(\d+)/)
+                      const input = e.target.value;
+                      const match = input.match(/channels\/(\d+)\/(\d+)/);
                       if (match) {
-                        const [_, serverId, channelId] = match
+                        const [_, serverId, channelId] = match;
                         setProjectConfig((prev) => ({
                           ...prev,
                           discord: { serverId, channelId },
-                        }))
+                        }));
                       } else {
                         setProjectConfig((prev) => ({
                           ...prev,
                           discord: undefined,
-                        }))
+                        }));
                       }
                     }}
                   />
@@ -480,8 +604,12 @@ export default function Dashboard() {
             <CardHeader className="pb-6">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <CardTitle className="text-xl text-white font-light">SIGNAL WEIGHTS</CardTitle>
-                  <p className="text-gray-400 font-mono text-sm">CONFIGURE DATA SOURCE IMPORTANCE</p>
+                  <CardTitle className="text-xl text-white font-light">
+                    SIGNAL WEIGHTS
+                  </CardTitle>
+                  <p className="text-gray-400 font-mono text-sm">
+                    CONFIGURE DATA SOURCE IMPORTANCE
+                  </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span
@@ -545,19 +673,19 @@ export default function Dashboard() {
                     color === "cyan"
                       ? "bg-gradient-to-r from-cyan-500 via-cyan-400 to-fuchsia-500/60"
                       : color === "blue"
-                        ? "bg-gradient-to-r from-blue-500 via-blue-400 to-fuchsia-500/50"
-                        : color === "emerald"
-                          ? "bg-gradient-to-r from-emerald-500 via-emerald-400 to-fuchsia-500/50"
-                          : "bg-gradient-to-r from-purple-500 via-fuchsia-500 to-cyan-400/60"
+                      ? "bg-gradient-to-r from-blue-500 via-blue-400 to-fuchsia-500/50"
+                      : color === "emerald"
+                      ? "bg-gradient-to-r from-emerald-500 via-emerald-400 to-fuchsia-500/50"
+                      : "bg-gradient-to-r from-purple-500 via-fuchsia-500 to-cyan-400/60";
 
                   const thumbClass =
                     color === "cyan"
                       ? "bg-cyan-400"
                       : color === "blue"
-                        ? "bg-blue-400"
-                        : color === "emerald"
-                          ? "bg-emerald-400"
-                          : "bg-fuchsia-400"
+                      ? "bg-blue-400"
+                      : color === "emerald"
+                      ? "bg-emerald-400"
+                      : "bg-fuchsia-400";
 
                   return (
                     <motion.div
@@ -568,7 +696,9 @@ export default function Dashboard() {
                       transition={{ delay: 0.1 * index + 0.7, duration: 0.6 }}
                     >
                       <div className="flex justify-between items-center">
-                        <label className="text-sm font-mono text-gray-300 tracking-wide">{label}</label>
+                        <label className="text-sm font-mono text-gray-300 tracking-wide">
+                          {label}
+                        </label>
                         <span className="text-lg text-white font-mono bg-black/30 px-3 py-1 rounded border border-white/10">
                           {value.toFixed(2)}
                         </span>
@@ -584,7 +714,9 @@ export default function Dashboard() {
                             step={0.01}
                             value={value}
                             aria-label={`${label} weight`}
-                            onChange={(e) => setter(Number.parseFloat(e.target.value))}
+                            onChange={(e) =>
+                              setter(Number.parseFloat(e.target.value))
+                            }
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                           />
                           {/* Progress bar */}
@@ -625,7 +757,7 @@ export default function Dashboard() {
                         </div>
                       </div>
                     </motion.div>
-                  )
+                  );
                 })}
               </div>
             </CardContent>
@@ -649,7 +781,11 @@ export default function Dashboard() {
               <>
                 <motion.div
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                  transition={{
+                    duration: 2,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "linear",
+                  }}
                 >
                   <Brain className="h-5 w-5 mr-3" />
                 </motion.div>
@@ -680,7 +816,11 @@ export default function Dashboard() {
                     <motion.div
                       className="relative"
                       animate={{ rotate: 360 }}
-                      transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                      transition={{
+                        duration: 3,
+                        repeat: Number.POSITIVE_INFINITY,
+                        ease: "linear",
+                      }}
                     >
                       <div className="w-20 h-20 border-2 border-white/10 rounded-full">
                         <div className="absolute top-0 left-0 w-20 h-20 border-2 border-transparent border-t-cyan-400 rounded-full animate-spin" />
@@ -690,7 +830,9 @@ export default function Dashboard() {
                       </div>
                     </motion.div>
                     <div className="text-center">
-                      <h3 className="text-2xl font-light text-white mb-4 tracking-wide">PROCESSING SIGNALS</h3>
+                      <h3 className="text-2xl font-light text-white mb-4 tracking-wide">
+                        PROCESSING SIGNALS
+                      </h3>
                       <p className="text-gray-400 font-mono text-sm">
                         ANALYZING GITHUB • TWITTER • ONCHAIN • COMMUNITY DATA
                       </p>
@@ -712,7 +854,10 @@ export default function Dashboard() {
               transition={{ duration: 0.8 }}
               className="mb-16"
             >
-              <AIInsightsDisplay insights={insights} isProcessing={aiProcessing} />
+              <AIInsightsDisplay
+                insights={insights}
+                isProcessing={aiProcessing}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -731,10 +876,14 @@ export default function Dashboard() {
                 <CardContent className="p-12">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     <div className="text-center lg:text-left">
-                      <h2 className="text-2xl font-mono text-gray-400 mb-4 uppercase tracking-wider">FINAL SCORE</h2>
+                      <h2 className="text-2xl font-mono text-gray-400 mb-4 uppercase tracking-wider">
+                        FINAL SCORE
+                      </h2>
                       <div className="text-8xl font-light text-white mb-8 tracking-tight">
                         {score.overall.toFixed(1)}
-                        <span className="text-2xl text-gray-400 font-mono">/100</span>
+                        <span className="text-2xl text-gray-400 font-mono">
+                          /100
+                        </span>
                       </div>
                       <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
                         <Badge
@@ -742,8 +891,8 @@ export default function Dashboard() {
                             score.trend === "rising"
                               ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                               : score.trend === "falling"
-                                ? "bg-red-500/10 text-red-400 border-red-500/20"
-                                : "bg-gray-500/10 text-gray-400 border-gray-500/20"
+                              ? "bg-red-500/10 text-red-400 border-red-500/20"
+                              : "bg-gray-500/10 text-gray-400 border-gray-500/20"
                           }`}
                         >
                           TREND: {score.trend.toUpperCase()}
@@ -817,17 +966,21 @@ export default function Dashboard() {
                               metric.color === "cyan"
                                 ? "bg-cyan-500/10 text-cyan-400"
                                 : metric.color === "blue"
-                                  ? "bg-blue-500/10 text-blue-400"
-                                  : metric.color === "emerald"
-                                    ? "bg-emerald-500/10 text-emerald-400"
-                                    : "bg-purple-500/10 text-purple-400"
+                                ? "bg-blue-500/10 text-blue-400"
+                                : metric.color === "emerald"
+                                ? "bg-emerald-500/10 text-emerald-400"
+                                : "bg-purple-500/10 text-purple-400"
                             }`}
                           >
                             {metric.icon}
                           </div>
-                          <div className="text-2xl font-light text-white">{metric.value.toFixed(1)}</div>
+                          <div className="text-2xl font-light text-white">
+                            {metric.value.toFixed(1)}
+                          </div>
                         </div>
-                        <h3 className="text-sm font-mono text-gray-300 mb-4 uppercase tracking-wide">{metric.title}</h3>
+                        <h3 className="text-sm font-mono text-gray-300 mb-4 uppercase tracking-wide">
+                          {metric.title}
+                        </h3>
                         {metric.action ? (
                           <Button
                             onClick={metric.action}
@@ -905,7 +1058,9 @@ export default function Dashboard() {
                         <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5" />
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-2">
-                            <span className="font-mono text-white uppercase tracking-wide">{alert.metric}</span>
+                            <span className="font-mono text-white uppercase tracking-wide">
+                              {alert.metric}
+                            </span>
                             <Badge
                               className={`text-xs font-mono ${
                                 alert.severity === "high"
@@ -916,7 +1071,9 @@ export default function Dashboard() {
                               {alert.severity.toUpperCase()}
                             </Badge>
                           </div>
-                          <p className="text-gray-300 text-sm font-mono">{alert.description}</p>
+                          <p className="text-gray-300 text-sm font-mono">
+                            {alert.description}
+                          </p>
                         </div>
                       </div>
                     </motion.div>
@@ -928,5 +1085,5 @@ export default function Dashboard() {
         </AnimatePresence>
       </div>
     </div>
-  )
+  );
 }
