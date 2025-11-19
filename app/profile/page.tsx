@@ -1,11 +1,13 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, Moon, Sun, RefreshCw, AlertCircle, Shield, AlertTriangle, TrendingDown, Zap, Lock, CheckCircle } from 'lucide-react';
+import { TrendingUp, Moon, Sun, RefreshCw, AlertCircle, Shield, AlertTriangle, TrendingDown, Zap, Lock, CheckCircle, Eye, Star, X, Plus, BarChart2, MessageCircle, Github, Activity, Users, LineChart, Filter, Bell, BellOff, ArrowUpRight, ArrowDownRight, Copy, ExternalLink, Brain } from 'lucide-react';
 
 interface MarketData {
   totalMarketCap: number;
   volume24h: number;
+  avgMomentum: number;
+  topGainer: string;
 }
 
 interface ProjectConfig {
@@ -18,7 +20,7 @@ interface ProjectConfig {
 }
 
 interface SecurityScore {
-  overall: number; // 0-100
+  overall: number;
   liquidity: number;
   holderDistribution: number;
   contractVerified: boolean;
@@ -38,6 +40,31 @@ interface PriceHistory {
   price: number;
 }
 
+interface AIInsight {
+  signal: 'BUY' | 'SELL' | 'HOLD' | 'WATCH';
+  confidence: number;
+  reason: string;
+  timeframe: '1H' | '4H' | '1D' | '1W';
+}
+
+interface MomentumSignal {
+  type: 'BREAKOUT' | 'REVERSAL' | 'TRENDING' | 'CONSOLIDATION';
+  strength: number;
+  confidence: number;
+  description: string;
+  timestamp: Date;
+  priceTarget?: number;
+  stopLoss?: number;
+}
+
+interface TradingOpportunity {
+  projectId: number;
+  signal: MomentumSignal;
+  riskReward: number;
+  timeframe: string;
+  urgency: 'HIGH' | 'MEDIUM' | 'LOW';
+}
+
 interface Project extends ProjectConfig {
   price: number;
   change24h: number;
@@ -50,27 +77,21 @@ interface Project extends ProjectConfig {
   securityScore?: SecurityScore;
   momentumAlerts?: MomentumAlert[];
   priceHistory?: PriceHistory[];
-  momentum24h?: number; // Combined momentum score
+  momentum24h?: number;
+  aiInsight?: AIInsight;
+  momentumSignals?: MomentumSignal[];
 }
 
-interface TokenMetadata {
-  symbol?: string;
-  name?: string;
-  decimals?: number;
-}
-
-interface PriceData {
-  price: number;
-}
-
-interface DexData {
-  price: number;
-  volume24h: number;
-  priceChange24h: number;
-  liquidity: number;
+interface WatchlistItem {
+  projectId: number;
+  priceAlert?: {
+    type: 'ABOVE' | 'BELOW';
+    price: number;
+  };
 }
 
 type FilterType = 'ALL' | 'MEME' | 'DEFI' | 'GAMER' | 'X SCAN';
+type ViewMode = 'TABLE' | 'CARDS';
 
 const SigniqMarket: React.FC = () => {
   const [darkMode, setDarkMode] = useState<boolean>(true);
@@ -81,10 +102,21 @@ const SigniqMarket: React.FC = () => {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [showAlerts, setShowAlerts] = useState<boolean>(true);
   const [sortBy, setSortBy] = useState<'momentum' | 'security' | 'marketCap'>('momentum');
+  const [viewMode, setViewMode] = useState<ViewMode>('TABLE');
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [showAIInsights, setShowAIInsights] = useState<boolean>(true);
+  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
+  const [compareProjects, setCompareProjects] = useState<number[]>([]);
+  const [showCompare, setShowCompare] = useState<boolean>(false);
+  const [tradingOpportunities, setTradingOpportunities] = useState<TradingOpportunity[]>([]);
+  const [activeSignals, setActiveSignals] = useState<MomentumSignal[]>([]);
+  const [showTradingPanel, setShowTradingPanel] = useState<boolean>(true);
   
   const [marketData, setMarketData] = useState<MarketData>({
     totalMarketCap: 0,
-    volume24h: 0
+    volume24h: 0,
+    avgMomentum: 0,
+    topGainer: ''
   });
 
   const projectConfigs: ProjectConfig[] = [
@@ -157,13 +189,110 @@ const SigniqMarket: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [previousProjects, setPreviousProjects] = useState<Project[]>([]);
 
-  // Calculate Security Score
+  // Load watchlist from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('signiq-watchlist');
+    if (saved) {
+      setWatchlist(JSON.parse(saved));
+    }
+  }, []);
+
+  // Save watchlist to localStorage
+  useEffect(() => {
+    localStorage.setItem('signiq-watchlist', JSON.stringify(watchlist));
+  }, [watchlist]);
+
+  // Enhanced AI signal generation with momentum analysis
+  const generateEnhancedAIInsight = (project: Project, previous?: Project): AIInsight & { momentumSignals: MomentumSignal[] } => {
+    const momentum = project.momentum24h || 50;
+    const security = project.securityScore?.overall || 50;
+    const volumeChange = previous ? ((project.volume24h - previous.volume24h) / previous.volume24h) * 100 : 0;
+    const priceChange = project.change24h;
+
+    const signals: MomentumSignal[] = [];
+    let mainSignal: AIInsight['signal'] = 'HOLD';
+    let confidence = 0;
+    let reason = '';
+
+    // Momentum breakout detection
+    if (momentum >= 75 && volumeChange > 50 && priceChange > 15) {
+      signals.push({
+        type: 'BREAKOUT',
+        strength: 85,
+        confidence: 80,
+        description: `Strong momentum breakout with ${volumeChange.toFixed(0)}% volume surge`,
+        timestamp: new Date(),
+        priceTarget: project.price * 1.25,
+        stopLoss: project.price * 0.92
+      });
+      mainSignal = 'BUY';
+      confidence = 85;
+      reason = 'Momentum breakout with high volume confirmation';
+    }
+    // Reversal detection
+    else if (momentum <= 25 && priceChange < -20 && volumeChange > 100) {
+      signals.push({
+        type: 'REVERSAL',
+        strength: 70,
+        confidence: 75,
+        description: `Potential reversal after ${Math.abs(priceChange).toFixed(1)}% drop with capitulation volume`,
+        timestamp: new Date(),
+        priceTarget: project.price * 1.15,
+        stopLoss: project.price * 0.85
+      });
+      mainSignal = 'BUY';
+      confidence = 70;
+      reason = 'Oversold with capitulation volume, potential bounce';
+    }
+    // Trend continuation
+    else if (momentum >= 60 && security >= 60 && priceChange > 5) {
+      signals.push({
+        type: 'TRENDING',
+        strength: 75,
+        confidence: 70,
+        description: `Strong uptrend with ${priceChange.toFixed(1)}% gains and solid fundamentals`,
+        timestamp: new Date(),
+        priceTarget: project.price * 1.20,
+        stopLoss: project.price * 0.88
+      });
+      mainSignal = 'BUY';
+      confidence = 75;
+      reason = 'Strong trend continuation with good fundamentals';
+    }
+    // Consolidation detection
+    else if (Math.abs(priceChange) < 5 && volumeChange < 20 && momentum >= 40 && momentum <= 60) {
+      signals.push({
+        type: 'CONSOLIDATION',
+        strength: 60,
+        confidence: 65,
+        description: 'Price consolidating, watching for next move',
+        timestamp: new Date()
+      });
+      mainSignal = 'WATCH';
+      confidence = 60;
+      reason = 'Consolidation phase, wait for breakout confirmation';
+    }
+    else {
+      mainSignal = 'HOLD';
+      confidence = 50;
+      reason = 'Mixed signals, waiting for clearer trend';
+    }
+
+    return {
+      signal: mainSignal,
+      confidence,
+      reason,
+      timeframe: '4H',
+      momentumSignals: signals
+    };
+  };
+
+  // Calculate Security Score based on real data
   const calculateSecurityScore = (project: Partial<Project>): SecurityScore => {
     const flags: string[] = [];
     let liquidityScore = 0;
     let distributionScore = 0;
 
-    // Liquidity score (out of 50)
     if (project.liquidity) {
       if (project.liquidity > 100000) liquidityScore = 50;
       else if (project.liquidity > 50000) liquidityScore = 40;
@@ -176,7 +305,6 @@ const SigniqMarket: React.FC = () => {
       liquidityScore = 25;
     }
 
-    // Holder distribution score (out of 50)
     if (project.holders) {
       if (project.holders > 1000) distributionScore = 50;
       else if (project.holders > 500) distributionScore = 40;
@@ -189,7 +317,6 @@ const SigniqMarket: React.FC = () => {
       distributionScore = 25;
     }
 
-    // Check for suspicious patterns
     if (project.change24h && Math.abs(project.change24h) > 100) {
       flags.push('High Volatility');
     }
@@ -207,26 +334,23 @@ const SigniqMarket: React.FC = () => {
 
     return {
       overall,
-      liquidity: liquidityScore * 2, // Convert to 0-100
+      liquidity: liquidityScore * 2,
       holderDistribution: distributionScore * 2,
-      contractVerified: true, // Would check on-chain in production
+      contractVerified: true,
       risk,
       flags
     };
   };
 
-  // Calculate Momentum Score (0-100)
   const calculateMomentum = (project: Project, previous?: Project): number => {
-    let score = 50; // Base score
+    let score = 50;
 
-    // Price momentum (±20 points)
     if (project.change24h > 20) score += 20;
     else if (project.change24h > 10) score += 15;
     else if (project.change24h > 5) score += 10;
     else if (project.change24h < -20) score -= 20;
     else if (project.change24h < -10) score -= 15;
 
-    // Volume momentum (±15 points)
     if (previous?.volume24h) {
       const volumeChange = ((project.volume24h - previous.volume24h) / previous.volume24h) * 100;
       if (volumeChange > 50) score += 15;
@@ -234,7 +358,6 @@ const SigniqMarket: React.FC = () => {
       else if (volumeChange < -25) score -= 10;
     }
 
-    // Holder growth (±15 points)
     if (previous?.holders) {
       const holderGrowth = ((project.holders - previous.holders) / previous.holders) * 100;
       if (holderGrowth > 10) score += 15;
@@ -245,11 +368,9 @@ const SigniqMarket: React.FC = () => {
     return Math.max(0, Math.min(100, score));
   };
 
-  // Generate Momentum Alerts
   const generateAlerts = (project: Project, previous?: Project): MomentumAlert[] => {
     const alerts: MomentumAlert[] = [];
 
-    // Price spike alert
     if (project.change24h > 50) {
       alerts.push({
         type: 'SPIKE',
@@ -266,7 +387,6 @@ const SigniqMarket: React.FC = () => {
       });
     }
 
-    // Volume surge alert
     if (previous?.volume24h) {
       const volumeChange = ((project.volume24h - previous.volume24h) / previous.volume24h) * 100;
       if (volumeChange > 100) {
@@ -279,7 +399,6 @@ const SigniqMarket: React.FC = () => {
       }
     }
 
-    // Dump alert
     if (project.change24h < -30) {
       alerts.push({
         type: 'DUMP',
@@ -289,7 +408,6 @@ const SigniqMarket: React.FC = () => {
       });
     }
 
-    // Holder growth
     if (previous?.holders) {
       const holderGrowth = ((project.holders - previous.holders) / previous.holders) * 100;
       if (holderGrowth > 20) {
@@ -305,28 +423,7 @@ const SigniqMarket: React.FC = () => {
     return alerts;
   };
 
-  // Fetch functions (keep existing)
-  const fetchTokenMetadata = async (mintAddress: string) => {
-    try {
-      const response = await fetch(process.env.NEXT_PUBLIC_SOLANA_RPC_URL!, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: "fetch-token-metadata",
-          method: "getAsset",
-          params: { id: mintAddress },
-        }),
-      });
-      const { result, error } = await response.json();
-      if (error) throw new Error(error.message);
-      return result;
-    } catch (err) {
-      console.error("Error fetching metadata:", err);
-      return null;
-    }
-  };
-
+  // Real data fetching functions
   const fetchHoldersCount = async (mintAddress: string): Promise<number> => {
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_SOLANA_RPC_URL!, {
@@ -349,11 +446,9 @@ const SigniqMarket: React.FC = () => {
     }
   };
 
-  const fetchPriceData = async (mintAddress: string): Promise<PriceData | null> => {
+  const fetchPriceData = async (mintAddress: string) => {
     try {
-      const response = await fetch(`https://api.jup.ag/price/v2?ids=${mintAddress}`, {
-        headers: { "User-Agent": "MyApp/1.0" },
-      });
+      const response = await fetch(`https://api.jup.ag/price/v2?ids=${mintAddress}`);
       if (!response.ok) throw new Error(`Failed to fetch price: ${response.status}`);
       const data = await response.json();
       const priceInfo = data.data?.[mintAddress];
@@ -387,7 +482,7 @@ const SigniqMarket: React.FC = () => {
     }
   };
 
-  const fetchDexData = async (mintAddress: string): Promise<DexData | null> => {
+  const fetchDexData = async (mintAddress: string) => {
     try {
       const response = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mintAddress}`);
       if (!response.ok) throw new Error('Failed to fetch DEX data');
@@ -431,10 +526,24 @@ const SigniqMarket: React.FC = () => {
             supply: supply
           };
           
-          return {
+          const project = {
             ...baseProject,
             securityScore: calculateSecurityScore(baseProject),
-            momentum24h: 50 // Default momentum
+            momentum24h: 50
+          };
+
+          const previous = previousProjects.find(p => p.id === project.id);
+          const enhancedInsight = generateEnhancedAIInsight(project, previous);
+
+          return {
+            ...project,
+            aiInsight: {
+              signal: enhancedInsight.signal,
+              confidence: enhancedInsight.confidence,
+              reason: enhancedInsight.reason,
+              timeframe: enhancedInsight.timeframe
+            },
+            momentumSignals: enhancedInsight.momentumSignals
           };
         }
       }
@@ -451,10 +560,24 @@ const SigniqMarket: React.FC = () => {
         liquidity: dexData?.liquidity
       };
 
-      return {
+      const project = {
         ...baseProject,
         securityScore: calculateSecurityScore(baseProject),
         momentum24h: calculateMomentum(baseProject)
+      };
+
+      const previous = previousProjects.find(p => p.id === project.id);
+      const enhancedInsight = generateEnhancedAIInsight(project, previous);
+
+      return {
+        ...project,
+        aiInsight: {
+          signal: enhancedInsight.signal,
+          confidence: enhancedInsight.confidence,
+          reason: enhancedInsight.reason,
+          timeframe: enhancedInsight.timeframe
+        },
+        momentumSignals: enhancedInsight.momentumSignals
       };
     } catch (err) {
       console.error(`Error fetching data for ${config.tick}:`, err);
@@ -477,14 +600,13 @@ const SigniqMarket: React.FC = () => {
     setError(null);
     
     try {
-      setPreviousProjects(projects); // Store previous state
+      setPreviousProjects(projects);
       
       const projectsData = await Promise.all(
         projectConfigs.map(config => fetchProjectData(config))
       );
       
-      // Add momentum alerts based on previous data
-      const projectsWithAlerts = projectsData.map((project, index) => {
+      const projectsWithAlerts = projectsData.map((project) => {
         const previous = previousProjects.find(p => p.id === project.id);
         return {
           ...project,
@@ -495,11 +617,17 @@ const SigniqMarket: React.FC = () => {
       
       const totalMarketCap = projectsData.reduce((sum, p) => sum + (p.marketCap || 0), 0);
       const totalVolume = projectsData.reduce((sum, p) => sum + (p.volume24h || 0), 0);
+      const avgMomentum = projectsData.reduce((sum, p) => sum + (p.momentum24h || 0), 0) / projectsData.length;
+      const topGainer = projectsData.reduce((max, p) => 
+        (p.change24h || 0) > (max.change24h || 0) ? p : max, projectsData[0]
+      );
       
       setProjects(projectsWithAlerts);
       setMarketData({
         totalMarketCap,
-        volume24h: totalVolume
+        volume24h: totalVolume,
+        avgMomentum,
+        topGainer: topGainer.tick
       });
       setLastUpdate(new Date());
     } catch (err) {
@@ -515,6 +643,37 @@ const SigniqMarket: React.FC = () => {
     const interval = setInterval(fetchAllProjectsData, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Generate trading opportunities from real data
+  useEffect(() => {
+    const newOpportunities: TradingOpportunity[] = [];
+    const newActiveSignals: MomentumSignal[] = [];
+
+    projects.forEach(project => {
+      if (project.momentumSignals) {
+        project.momentumSignals.forEach(signal => {
+          if (signal.strength >= 70) {
+            const riskReward = signal.priceTarget && signal.stopLoss 
+              ? (signal.priceTarget - project.price) / (project.price - signal.stopLoss)
+              : 2;
+            
+            newOpportunities.push({
+              projectId: project.id,
+              signal,
+              riskReward,
+              timeframe: '1-3 days',
+              urgency: signal.strength >= 80 ? 'HIGH' : signal.strength >= 70 ? 'MEDIUM' : 'LOW'
+            });
+
+            newActiveSignals.push(signal);
+          }
+        });
+      }
+    });
+
+    setTradingOpportunities(newOpportunities.slice(0, 5));
+    setActiveSignals(newActiveSignals.slice(0, 10));
+  }, [projects]);
 
   const formatNumber = (num: number): string => {
     if (!num || num === 0) return '$0';
@@ -558,6 +717,43 @@ const SigniqMarket: React.FC = () => {
     return 'text-red-500';
   };
 
+  const getSignalColor = (signal?: AIInsight['signal']) => {
+    if (signal === 'BUY') return 'text-green-500 bg-green-500/10';
+    if (signal === 'SELL') return 'text-red-500 bg-red-500/10';
+    if (signal === 'WATCH') return 'text-yellow-500 bg-yellow-500/10';
+    return 'text-gray-500 bg-gray-500/10';
+  };
+
+  const toggleWatchlist = (projectId: number) => {
+    setWatchlist(prev => {
+      const exists = prev.find(w => w.projectId === projectId);
+      if (exists) {
+        return prev.filter(w => w.projectId !== projectId);
+      } else {
+        return [...prev, { projectId }];
+      }
+    });
+  };
+
+  const isInWatchlist = (projectId: number) => {
+    return watchlist.some(w => w.projectId === projectId);
+  };
+
+  const toggleCompare = (projectId: number) => {
+    setCompareProjects(prev => {
+      if (prev.includes(projectId)) {
+        return prev.filter(id => id !== projectId);
+      } else if (prev.length < 3) {
+        return [...prev, projectId];
+      }
+      return prev;
+    });
+  };
+
+  const copyAddress = (address: string) => {
+    navigator.clipboard.writeText(address);
+  };
+
   // Sort and filter projects
   let filteredProjects = projects.filter(project => {
     const matchesSearch = project.tick.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -566,7 +762,6 @@ const SigniqMarket: React.FC = () => {
     return matchesSearch && matchesFilter;
   });
 
-  // Sort by selected criteria
   filteredProjects = [...filteredProjects].sort((a, b) => {
     if (sortBy === 'momentum') {
       return (b.momentum24h || 0) - (a.momentum24h || 0);
@@ -577,14 +772,12 @@ const SigniqMarket: React.FC = () => {
     }
   });
 
-  // Get all alerts across projects
   const allAlerts = projects.flatMap(p => 
     (p.momentumAlerts || []).map(alert => ({ ...alert, project: p.tick }))
-  ).slice(0, 5); // Show top 5 alerts
+  ).slice(0, 5);
 
   const filters: FilterType[] = ['MEME', 'DEFI', 'GAMER', 'X SCAN'];
 
-  // Mini Sparkline Component
   const MiniSparkline: React.FC<{ change: number }> = ({ change }) => {
     const isPositive = change >= 0;
     const points = Array.from({ length: 10 }, (_, i) => {
@@ -612,10 +805,502 @@ const SigniqMarket: React.FC = () => {
     );
   };
 
+  // Trading Intelligence Panel Component
+  const TradingIntelligencePanel = () => (
+    <div className="mb-6 bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-xl p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Zap size={20} className="text-yellow-500" />
+          <span className="font-bold text-yellow-400">TRADING INTELLIGENCE</span>
+          <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full animate-pulse">
+            LIVE
+          </span>
+        </div>
+        <button 
+          onClick={() => setShowTradingPanel(!showTradingPanel)}
+          className="text-gray-500 hover:text-white transition-colors"
+        >
+          {showTradingPanel ? '↑' : '↓'}
+        </button>
+      </div>
+
+      {showTradingPanel && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Trading Opportunities */}
+          <div className="space-y-4">
+            <h3 className="font-bold text-green-400 flex items-center gap-2">
+              <TrendingUp size={16} />
+              Hot Opportunities
+            </h3>
+            {tradingOpportunities.length > 0 ? (
+              tradingOpportunities.map((opp, index) => {
+                const project = projects.find(p => p.id === opp.projectId);
+                return (
+                  <div key={index} className="bg-black/40 p-3 rounded-lg border-l-4 border-green-500">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{project?.icon}</span>
+                        <span className="font-bold">{project?.tick}</span>
+                      </div>
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${
+                        opp.urgency === 'HIGH' ? 'bg-red-500/20 text-red-400' :
+                        opp.urgency === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-400' :
+                        'bg-blue-500/20 text-blue-400'
+                      }`}>
+                        {opp.urgency}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-300 mb-2">{opp.signal.description}</div>
+                    <div className="flex justify-between text-xs">
+                      <span>R/R: {opp.riskReward.toFixed(2)}</span>
+                      <span>Target: {formatPrice(opp.signal.priceTarget || 0)}</span>
+                      <span>SL: {formatPrice(opp.signal.stopLoss || 0)}</span>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-gray-500 text-sm text-center py-4">
+                No high-confidence opportunities at the moment
+              </div>
+            )}
+          </div>
+
+          {/* Active Signals */}
+          <div className="space-y-4">
+            <h3 className="font-bold text-purple-400 flex items-center gap-2">
+              <Activity size={16} />
+              Active Signals
+            </h3>
+            {activeSignals.length > 0 ? (
+              activeSignals.map((signal, index) => (
+                <div key={index} className="bg-black/40 p-3 rounded-lg border-l-4 border-purple-500">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`font-bold text-sm ${
+                      signal.type === 'BREAKOUT' ? 'text-green-400' :
+                      signal.type === 'REVERSAL' ? 'text-yellow-400' :
+                      signal.type === 'TRENDING' ? 'text-cyan-400' :
+                      'text-gray-400'
+                    }`}>
+                      {signal.type}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {signal.strength}% strength
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-300 mb-2">{signal.description}</div>
+                  <div className="w-full h-1 bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full ${
+                        signal.strength >= 80 ? 'bg-green-500' :
+                        signal.strength >= 70 ? 'bg-yellow-500' :
+                        'bg-blue-500'
+                      }`}
+                      style={{ width: `${signal.strength}%` }}
+                    />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-gray-500 text-sm text-center py-4">
+                No active trading signals
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // Enhanced AI Intelligence Panel
+  const EnhancedAIIntelligencePanel = () => {
+    const buySignals = projects.filter(p => p.aiInsight?.signal === 'BUY').length;
+    const watchSignals = projects.filter(p => p.aiInsight?.signal === 'WATCH').length;
+    const strongMomentum = projects.filter(p => (p.momentum24h || 0) >= 70).length;
+    const highSecurity = projects.filter(p => (p.securityScore?.overall || 0) >= 80).length;
+
+    return (
+      <div className="mb-6 bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Brain size={20} className="text-purple-400" />
+            <span className="font-bold text-purple-400">AI MARKET INTELLIGENCE</span>
+          </div>
+          <button onClick={() => setShowAIInsights(false)} className="text-gray-500 hover:text-white">
+            ✕
+          </button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-black/40 p-4 rounded-lg border-l-4 border-green-500">
+            <div className="text-xs text-gray-400 mb-1">BUY Signals</div>
+            <div className="text-2xl font-bold text-green-500">{buySignals}</div>
+            <div className="text-xs text-gray-500 mt-1">Trading Opportunities</div>
+          </div>
+          <div className="bg-black/40 p-4 rounded-lg border-l-4 border-yellow-500">
+            <div className="text-xs text-gray-400 mb-1">WATCH Signals</div>
+            <div className="text-2xl font-bold text-yellow-500">{watchSignals}</div>
+            <div className="text-xs text-gray-500 mt-1">Potential Entries</div>
+          </div>
+          <div className="bg-black/40 p-4 rounded-lg border-l-4 border-cyan-500">
+            <div className="text-xs text-gray-400 mb-1">Strong Momentum</div>
+            <div className="text-2xl font-bold text-cyan-500">{strongMomentum}</div>
+            <div className="text-xs text-gray-500 mt-1">Trending Projects</div>
+          </div>
+          <div className="bg-black/40 p-4 rounded-lg border-l-4 border-blue-500">
+            <div className="text-xs text-gray-400 mb-1">High Security</div>
+            <div className="text-2xl font-bold text-blue-500">{highSecurity}</div>
+            <div className="text-xs text-gray-500 mt-1">Safe Projects</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Project Detail Modal Component
+  const ProjectDetailModal = ({ project, onClose }: { project: Project; onClose: () => void }) => (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div 
+        className={`${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'} border-2 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-gradient-to-r from-cyan-900/20 to-blue-900/20 backdrop-blur-sm border-b border-gray-700 p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="text-4xl">{project.icon}</div>
+              <div>
+                <h2 className="text-3xl font-bold">{project.name}</h2>
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="text-xl text-gray-400">{project.tick}</span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    project.category === 'DEFI' ? 'bg-blue-500/20 text-blue-400' :
+                    project.category === 'MEME' ? 'bg-purple-500/20 text-purple-400' :
+                    project.category === 'GAMER' ? 'bg-green-500/20 text-green-400' :
+                    'bg-cyan-500/20 text-cyan-400'
+                  }`}>
+                    {project.category}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <button onClick={onClose} className="p-2 hover:bg-gray-800 rounded-full transition-colors">
+              <X size={24} />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Price & Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className={`${darkMode ? 'bg-black/40' : 'bg-gray-100'} p-4 rounded-xl`}>
+              <div className="text-xs text-gray-400 mb-1">Price</div>
+              <div className="text-2xl font-bold">{formatPrice(project.price)}</div>
+              <div className={`text-sm mt-1 ${project.change24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {project.change24h >= 0 ? '+' : ''}{project.change24h.toFixed(2)}%
+              </div>
+            </div>
+            <div className={`${darkMode ? 'bg-black/40' : 'bg-gray-100'} p-4 rounded-xl`}>
+              <div className="text-xs text-gray-400 mb-1">Market Cap</div>
+              <div className="text-2xl font-bold">{formatNumber(project.marketCap)}</div>
+            </div>
+            <div className={`${darkMode ? 'bg-black/40' : 'bg-gray-100'} p-4 rounded-xl`}>
+              <div className="text-xs text-gray-400 mb-1">Volume 24h</div>
+              <div className="text-2xl font-bold">{formatNumber(project.volume24h)}</div>
+            </div>
+            <div className={`${darkMode ? 'bg-black/40' : 'bg-gray-100'} p-4 rounded-xl`}>
+              <div className="text-xs text-gray-400 mb-1">Holders</div>
+              <div className="text-2xl font-bold">{project.holders.toLocaleString()}</div>
+            </div>
+          </div>
+
+          {/* AI Insight */}
+          {project.aiInsight && (
+            <div className={`${darkMode ? 'bg-gradient-to-r from-purple-900/20 to-blue-900/20' : 'bg-purple-50'} border ${darkMode ? 'border-purple-500/30' : 'border-purple-200'} rounded-xl p-6`}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Brain size={20} className="text-purple-400" />
+                  <span className="font-bold">AI Trading Signal</span>
+                </div>
+                <div className={`px-4 py-2 rounded-full font-bold ${getSignalColor(project.aiInsight.signal)}`}>
+                  {project.aiInsight.signal}
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-400">Confidence</span>
+                  <span className="font-bold">{project.aiInsight.confidence}%</span>
+                </div>
+                <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-purple-500 to-blue-500"
+                    style={{ width: `${project.aiInsight.confidence}%` }}
+                  />
+                </div>
+                <div className="text-sm text-gray-300 mt-3">
+                  <strong>Reason:</strong> {project.aiInsight.reason}
+                </div>
+                <div className="text-xs text-gray-500">
+                  Timeframe: {project.aiInsight.timeframe}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Momentum Signals */}
+          {project.momentumSignals && project.momentumSignals.length > 0 && (
+            <div className={`${darkMode ? 'bg-gradient-to-r from-cyan-900/20 to-blue-900/20' : 'bg-cyan-50'} border ${darkMode ? 'border-cyan-500/30' : 'border-cyan-200'} rounded-xl p-6`}>
+              <div className="flex items-center gap-2 mb-4">
+                <Zap size={20} className="text-cyan-400" />
+                <span className="font-bold">Momentum Signals</span>
+              </div>
+              <div className="space-y-3">
+                {project.momentumSignals.map((signal, index) => (
+                  <div key={index} className="bg-black/20 p-4 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`font-bold ${
+                        signal.type === 'BREAKOUT' ? 'text-green-400' :
+                        signal.type === 'REVERSAL' ? 'text-yellow-400' :
+                        signal.type === 'TRENDING' ? 'text-cyan-400' :
+                        'text-gray-400'
+                      }`}>
+                        {signal.type}
+                      </span>
+                      <span className="text-sm text-gray-400">{signal.strength}% strength</span>
+                    </div>
+                    <p className="text-sm text-gray-300 mb-3">{signal.description}</p>
+                    {(signal.priceTarget || signal.stopLoss) && (
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        {signal.priceTarget && (
+                          <div>
+                            <span className="text-gray-400">Target: </span>
+                            <span className="text-green-400 font-bold">{formatPrice(signal.priceTarget)}</span>
+                          </div>
+                        )}
+                        {signal.stopLoss && (
+                          <div>
+                            <span className="text-gray-400">Stop: </span>
+                            <span className="text-red-400 font-bold">{formatPrice(signal.stopLoss)}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Security Analysis */}
+          {project.securityScore && (
+            <div className={`${darkMode ? 'bg-black/40' : 'bg-gray-100'} rounded-xl p-6`}>
+              <div className="flex items-center gap-2 mb-4">
+                <Shield size={20} className="text-blue-400" />
+                <span className="font-bold">Security Analysis</span>
+                <span className={`ml-auto px-3 py-1 rounded-full text-sm font-semibold ${
+                  project.securityScore.risk === 'LOW' ? 'bg-green-500/20 text-green-400' :
+                  project.securityScore.risk === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-400' :
+                  'bg-red-500/20 text-red-400'
+                }`}>
+                  {project.securityScore.risk} RISK
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <div className="text-xs text-gray-400 mb-1">Overall Score</div>
+                  <div className="text-2xl font-bold">{project.securityScore.overall}/100</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-400 mb-1">Liquidity Score</div>
+                  <div className="text-2xl font-bold">{project.securityScore.liquidity}/100</div>
+                </div>
+              </div>
+              {project.securityScore.flags.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-sm text-gray-400">Security Flags:</div>
+                  {project.securityScore.flags.map((flag, i) => (
+                    <div key={i} className="flex items-center gap-2 text-sm text-yellow-400">
+                      <AlertTriangle size={14} />
+                      {flag}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Contract Address */}
+          <div className={`${darkMode ? 'bg-black/40' : 'bg-gray-100'} rounded-xl p-4`}>
+            <div className="text-xs text-gray-400 mb-2">Contract Address</div>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 text-sm font-mono">{project.contractAddress}</code>
+              <button 
+                onClick={() => copyAddress(project.contractAddress)}
+                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <Copy size={16} />
+              </button>
+              <a 
+                href={`https://solscan.io/token/${project.contractAddress}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <ExternalLink size={16} />
+              </a>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => toggleWatchlist(project.id)}
+              className={`flex-1 py-3 rounded-xl font-semibold transition-all ${
+                isInWatchlist(project.id)
+                  ? 'bg-yellow-500 text-black hover:bg-yellow-600'
+                  : 'bg-gray-700 hover:bg-gray-600'
+              }`}
+            >
+              <Star size={18} className="inline-block mr-2" fill={isInWatchlist(project.id) ? 'currentColor' : 'none'} />
+              {isInWatchlist(project.id) ? 'In Watchlist' : 'Add to Watchlist'}
+            </button>
+            <button
+              onClick={() => toggleCompare(project.id)}
+              className={`flex-1 py-3 rounded-xl font-semibold transition-all ${
+                compareProjects.includes(project.id)
+                  ? 'bg-cyan-500 text-black hover:bg-cyan-600'
+                  : 'bg-gray-700 hover:bg-gray-600'
+              }`}
+            >
+              <BarChart2 size={18} className="inline-block mr-2" />
+              {compareProjects.includes(project.id) ? 'Remove from Compare' : 'Compare'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Comparison Modal
+  const ComparisonModal = ({ projectIds, onClose }: { projectIds: number[]; onClose: () => void }) => {
+    const compareProjs = projects.filter(p => projectIds.includes(p.id));
+    
+    return (
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+        <div 
+          className={`${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'} border-2 rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="sticky top-0 bg-gradient-to-r from-cyan-900/20 to-blue-900/20 backdrop-blur-sm border-b border-gray-700 p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BarChart2 size={24} className="text-cyan-400" />
+                <h2 className="text-2xl font-bold">Project Comparison</h2>
+              </div>
+              <button onClick={onClose} className="p-2 hover:bg-gray-800 rounded-full transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+          </div>
+
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {compareProjs.map(project => (
+                <div key={project.id} className={`${darkMode ? 'bg-black/40' : 'bg-gray-100'} rounded-xl p-6 space-y-4`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="text-3xl">{project.icon}</div>
+                    <div>
+                      <div className="font-bold text-lg">{project.tick}</div>
+                      <div className="text-sm text-gray-500">{project.name}</div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <div className="text-xs text-gray-400">Price</div>
+                      <div className="text-xl font-bold">{formatPrice(project.price)}</div>
+                      <div className={`text-sm ${project.change24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {project.change24h >= 0 ? '+' : ''}{project.change24h.toFixed(2)}%
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs text-gray-400">Momentum Score</div>
+                      <div className="flex items-center gap-2">
+                        <div className={`text-xl font-bold ${getMomentumColor(project.momentum24h)}`}>
+                          {project.momentum24h?.toFixed(0)}
+                        </div>
+                        <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full ${
+                              (project.momentum24h || 0) >= 70 ? 'bg-green-500' :
+                              (project.momentum24h || 0) >= 50 ? 'bg-cyan-500' :
+                              (project.momentum24h || 0) >= 30 ? 'bg-yellow-500' :
+                              'bg-red-500'
+                            }`}
+                            style={{ width: `${project.momentum24h}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs text-gray-400">Security Score</div>
+                      <div className="flex items-center gap-2">
+                        <div className={`text-xl font-bold ${getSecurityColor(project.securityScore)}`}>
+                          {project.securityScore?.overall.toFixed(0)}
+                        </div>
+                        <div className={`px-2 py-1 rounded text-xs font-semibold ${
+                          project.securityScore?.risk === 'LOW' ? 'bg-green-500/20 text-green-400' :
+                          project.securityScore?.risk === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-red-500/20 text-red-400'
+                        }`}>
+                          {project.securityScore?.risk}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs text-gray-400">AI Signal</div>
+                      <div className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${getSignalColor(project.aiInsight?.signal)}`}>
+                        {project.aiInsight?.signal}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs text-gray-400">Market Cap</div>
+                      <div className="text-lg font-bold">{formatNumber(project.marketCap)}</div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs text-gray-400">Volume 24h</div>
+                      <div className="text-lg font-bold">{formatNumber(project.volume24h)}</div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs text-gray-400">Holders</div>
+                      <div className="text-lg font-bold">{project.holders.toLocaleString()}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-black text-white' : 'bg-gray-50 text-gray-900'}`}>
+      {/* Modals */}
+      {selectedProject && <ProjectDetailModal project={selectedProject} onClose={() => setSelectedProject(null)} />}
+      {showCompare && compareProjects.length > 0 && (
+        <ComparisonModal projectIds={compareProjects} onClose={() => setShowCompare(false)} />
+      )}
+
       {/* Header */}
-      <header className="border-b border-gray-800 p-4">
+      <header className="border-b border-gray-800 p-4 sticky top-0 bg-black/80 backdrop-blur-sm z-40">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center">
@@ -628,6 +1313,21 @@ const SigniqMarket: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-4">
+            {watchlist.length > 0 && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                <Star size={16} className="text-yellow-500" fill="currentColor" />
+                <span className="text-sm font-semibold">{watchlist.length} Watching</span>
+              </div>
+            )}
+            {compareProjects.length > 0 && (
+              <button
+                onClick={() => setShowCompare(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-cyan-500 text-black rounded-lg font-semibold hover:bg-cyan-600 transition-colors"
+              >
+                <BarChart2 size={16} />
+                Compare ({compareProjects.length})
+              </button>
+            )}
             <button 
               onClick={fetchAllProjectsData}
               disabled={loading}
@@ -683,6 +1383,10 @@ const SigniqMarket: React.FC = () => {
           </div>
         )}
 
+        {/* AI Intelligence & Trading Panels */}
+        <EnhancedAIIntelligencePanel />
+        <TradingIntelligencePanel />
+
         {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-red-900/20 border border-red-500 rounded-lg flex items-center gap-3">
@@ -730,13 +1434,25 @@ const SigniqMarket: React.FC = () => {
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Search projects..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={`flex-1 px-6 py-3 rounded-xl ${darkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300'} border-2 focus:outline-none focus:border-cyan-400`}
           />
           
           <div className="flex gap-3 flex-wrap">
+            <button
+              onClick={() => setActiveFilter('ALL')}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                activeFilter === 'ALL'
+                  ? 'bg-cyan-400 text-black'
+                  : darkMode 
+                    ? 'bg-gray-900 hover:bg-gray-800'
+                    : 'bg-white hover:bg-gray-100'
+              }`}
+            >
+              ALL
+            </button>
             {filters.map((filter) => (
               <button
                 key={filter}
@@ -754,7 +1470,7 @@ const SigniqMarket: React.FC = () => {
             ))}
           </div>
 
-          {/* Sort Buttons */}
+          {/* Sort & View Buttons */}
           <div className="flex gap-2">
             <button
               onClick={() => setSortBy('momentum')}
@@ -796,13 +1512,12 @@ const SigniqMarket: React.FC = () => {
               <thead>
                 <tr className={`${darkMode ? 'bg-black' : 'bg-gray-100'} border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
                   <th className="text-left p-4 font-semibold">#</th>
-                  <th className="text-left p-4 font-semibold">Tick</th>
+                  <th className="text-left p-4 font-semibold">Project</th>
                   <th className="text-left p-4 font-semibold">Price</th>
-                  <th className="text-left p-4 font-semibold">24h Chart</th>
-                  <th className="text-left p-4 font-semibold">24h%</th>
-                  <th className="text-left p-4 font-semibold">Volume (24h)</th>
+                  <th className="text-left p-4 font-semibold">24h</th>
+                  <th className="text-left p-4 font-semibold">Chart</th>
+                  <th className="text-left p-4 font-semibold">Volume</th>
                   <th className="text-left p-4 font-semibold">Market Cap</th>
-                  <th className="text-left p-4 font-semibold">Holders</th>
                   <th className="text-left p-4 font-semibold">
                     <div className="flex items-center gap-1">
                       <Zap size={14} className="text-yellow-500" />
@@ -815,19 +1530,26 @@ const SigniqMarket: React.FC = () => {
                       Security
                     </div>
                   </th>
+                  <th className="text-left p-4 font-semibold">
+                    <div className="flex items-center gap-1">
+                      <Brain size={14} className="text-purple-500" />
+                      AI Signal
+                    </div>
+                  </th>
+                  <th className="text-left p-4 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading && projects.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="text-center p-8 text-gray-400">
+                    <td colSpan={11} className="text-center p-8 text-gray-400">
                       <RefreshCw className="animate-spin inline-block mr-2" size={20} />
                       Loading market intelligence...
                     </td>
                   </tr>
                 ) : filteredProjects.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="text-center p-8 text-gray-400">
+                    <td colSpan={11} className="text-center p-8 text-gray-400">
                       No projects found
                     </td>
                   </tr>
@@ -835,36 +1557,48 @@ const SigniqMarket: React.FC = () => {
                   filteredProjects.map((project, index) => (
                     <tr 
                       key={project.id}
-                      className={`border-b ${darkMode ? 'border-gray-800 hover:bg-gray-800' : 'border-gray-200 hover:bg-gray-50'} transition-colors ${project.error ? 'opacity-50' : ''}`}
+                      className={`border-b ${darkMode ? 'border-gray-800 hover:bg-gray-800' : 'border-gray-200 hover:bg-gray-50'} transition-colors cursor-pointer ${project.error ? 'opacity-50' : ''}`}
+                      onClick={() => setSelectedProject(project)}
                     >
-                      <td className="p-4 font-semibold">{index + 1}</td>
+                      <td className="p-4 font-semibold text-gray-500">{index + 1}</td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div className="text-2xl">{project.icon}</div>
                           <div>
-                            <div className="font-bold">{project.tick}</div>
+                            <div className="font-bold flex items-center gap-2">
+                              {project.tick}
+                              {isInWatchlist(project.id) && (
+                                <Star size={14} className="text-yellow-500" fill="currentColor" />
+                              )}
+                            </div>
                             <div className="text-xs text-gray-500">{project.name}</div>
                           </div>
                         </div>
                       </td>
                       <td className="p-4 font-mono text-sm">{formatPrice(project.price)}</td>
                       <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          {project.change24h >= 0 ? (
+                            <ArrowUpRight size={16} className="text-green-500" />
+                          ) : (
+                            <ArrowDownRight size={16} className="text-red-500" />
+                          )}
+                          <span className={`font-semibold ${project.change24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                            {project.change24h >= 0 ? '+' : ''}{project.change24h.toFixed(2)}%
+                          </span>
+                        </div>
+                      </td>
+                      <td className="p-4">
                         <MiniSparkline change={project.change24h} />
                       </td>
-                      <td className="p-4">
-                        <span className={`font-semibold ${project.change24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                          {project.change24h >= 0 ? '+' : ''}{project.change24h.toFixed(2)}%
-                        </span>
-                      </td>
-                      <td className="p-4">{formatNumber(project.volume24h)}</td>
-                      <td className="p-4">{formatNumber(project.marketCap)}</td>
-                      <td className="p-4">{project.holders.toLocaleString()}</td>
+                      <td className="p-4 text-sm">{formatNumber(project.volume24h)}</td>
+                      <td className="p-4 text-sm">{formatNumber(project.marketCap)}</td>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
-                          <div className={`font-bold ${getMomentumColor(project.momentum24h)}`}>
+                          <div className={`font-bold text-lg ${getMomentumColor(project.momentum24h)}`}>
                             {project.momentum24h?.toFixed(0)}
                           </div>
-                          <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
+                          <div className="w-12 h-2 bg-gray-700 rounded-full overflow-hidden">
                             <div 
                               className={`h-full ${
                                 (project.momentum24h || 0) >= 70 ? 'bg-green-500' :
@@ -887,11 +1621,79 @@ const SigniqMarket: React.FC = () => {
                               {project.securityScore?.overall.toFixed(0) || 'N/A'}
                             </div>
                             {project.securityScore && (
-                              <div className="text-xs text-gray-500">
+                              <div className={`text-xs ${
+                                project.securityScore.risk === 'LOW' ? 'text-green-500' :
+                                project.securityScore.risk === 'MEDIUM' ? 'text-yellow-500' :
+                                'text-red-500'
+                              }`}>
                                 {project.securityScore.risk}
                               </div>
                             )}
                           </div>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        {project.aiInsight && (
+                          <div className="flex flex-col gap-1">
+                            <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold text-center ${getSignalColor(project.aiInsight.signal)}`}>
+                              {project.aiInsight.signal}
+                            </div>
+                            {project.momentumSignals && project.momentumSignals.length > 0 && (
+                              <div className="flex gap-1 flex-wrap">
+                                {project.momentumSignals.slice(0, 2).map((signal, idx) => (
+                                  <div
+                                    key={idx}
+                                    className={`text-xs px-2 py-1 rounded ${
+                                      signal.type === 'BREAKOUT' ? 'bg-green-500/20 text-green-400' :
+                                      signal.type === 'REVERSAL' ? 'bg-yellow-500/20 text-yellow-400' :
+                                      signal.type === 'TRENDING' ? 'bg-cyan-500/20 text-cyan-400' :
+                                      'bg-gray-500/20 text-gray-400'
+                                    }`}
+                                    title={signal.description}
+                                  >
+                                    {signal.type.slice(0, 3)}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            <div className="text-xs text-gray-500 text-center">
+                              {project.aiInsight.confidence}% conf.
+                            </div>
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-4" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => toggleWatchlist(project.id)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              isInWatchlist(project.id)
+                                ? 'bg-yellow-500/20 text-yellow-500'
+                                : 'bg-gray-700 hover:bg-gray-600'
+                            }`}
+                            title={isInWatchlist(project.id) ? 'Remove from watchlist' : 'Add to watchlist'}
+                          >
+                            <Star size={16} fill={isInWatchlist(project.id) ? 'currentColor' : 'none'} />
+                          </button>
+                          <button
+                            onClick={() => toggleCompare(project.id)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              compareProjects.includes(project.id)
+                                ? 'bg-cyan-500/20 text-cyan-500'
+                                : 'bg-gray-700 hover:bg-gray-600'
+                            }`}
+                            title={compareProjects.includes(project.id) ? 'Remove from compare' : 'Add to compare'}
+                            disabled={!compareProjects.includes(project.id) && compareProjects.length >= 3}
+                          >
+                            <BarChart2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => setSelectedProject(project)}
+                            className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors"
+                            title="View details"
+                          >
+                            <Eye size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -902,15 +1704,24 @@ const SigniqMarket: React.FC = () => {
           </div>
         </div>
 
-        {/* Footer Note */}
-        <div className="mt-8 text-center text-gray-500 text-sm">
+        {/* Footer */}
+        <div className="mt-8 text-center text-gray-500 text-sm space-y-2">
           <p>
-            🧠 AI-Powered Intelligence • Real-time Momentum Tracking • Security Scoring
+            🧠 AI-Powered Intelligence • Real-time Momentum Tracking • Security Scoring • Advanced Trading Signals
             {lastUpdate && ` • Last updated: ${lastUpdate.toLocaleTimeString()}`}
           </p>
-          <p className="mt-2 text-xs">
-            Price data from DexScreener & Jupiter • On-chain data from Solana RPC • Momentum & Security scores by Signiq AI
+          <p className="text-xs">
+            Price data from DexScreener & Jupiter • On-chain data from Solana RPC • AI signals by Signiq Intelligence Engine
           </p>
+          <div className="flex items-center justify-center gap-4 mt-4">
+            <a href="#" className="text-cyan-400 hover:text-cyan-300 transition-colors">Documentation</a>
+            <span className="text-gray-700">•</span>
+            <a href="#" className="text-cyan-400 hover:text-cyan-300 transition-colors">API Access</a>
+            <span className="text-gray-700">•</span>
+            <a href="#" className="text-cyan-400 hover:text-cyan-300 transition-colors">Discord</a>
+            <span className="text-gray-700">•</span>
+            <a href="#" className="text-cyan-400 hover:text-cyan-300 transition-colors">Twitter</a>
+          </div>
         </div>
       </div>
     </div>
