@@ -1116,17 +1116,17 @@ export class SolanaDataFetcher {
       });
 
       // Sort by liquidity
-      formattedPairs.sort((a, b) => b.liquidity - a.liquidity);
+      formattedPairs.sort((a: { liquidity: number; }, b: { liquidity: number; }) => b.liquidity - a.liquidity);
 
-      const totalLiquidity = formattedPairs.reduce((sum, p) => sum + p.liquidity, 0);
-      const totalVolume24h = formattedPairs.reduce((sum, p) => sum + p.volume24h, 0);
+      const totalLiquidity = formattedPairs.reduce((sum: any, p: { liquidity: any; }) => sum + p.liquidity, 0);
+      const totalVolume24h = formattedPairs.reduce((sum: any, p: { volume24h: any; }) => sum + p.volume24h, 0);
 
       // Find best DEX (highest liquidity)
       const bestDex = formattedPairs.length > 0 ? formattedPairs[0].dex : 'Unknown';
 
       // Calculate liquidity distribution by DEX
       const liquidityDistribution: { [dex: string]: number } = {};
-      formattedPairs.forEach(p => {
+      formattedPairs.forEach((p: { dex: string | number; liquidity: number; }) => {
         if (!liquidityDistribution[p.dex]) {
           liquidityDistribution[p.dex] = 0;
         }
