@@ -183,6 +183,38 @@ const SigniqMarket: React.FC = () => {
       icon: "🎉",
       contractAddress: "C15AhpLTjjVBLLPq5xqH9ewXscSN4DcpkePmHg7geTa6",
       category: "X SCAN"
+    },
+    {
+      id: 9,
+      tick: "SWARM",
+      name: "Swarm",
+      icon: "🎉",
+      contractAddress: "otgodXJDJFFip57AA43ERfDs8pcGviDd9oUJsnEcyai",
+      category: "X SCAN"
+    },
+    {
+      id: 10,
+      tick: "AIDP",
+      name: "AIdp.Store",
+      icon: "🎉",
+      contractAddress: "PLNk8NUTBeptajEX9GzZrxsYPJ1psnw62dPnWkGcyai",
+      category: "DEFI"
+    },
+    {
+      id: 11,
+      tick: "MICK",
+      name: "Mikayla",
+      icon: "🎉",
+      contractAddress: "QCDgZ9RDarrnDq57GiSxPyWeJ3PKJndfMcHYkMWcyai",
+      category: "MEME",
+    },
+    {
+      id: 12,
+      tick: "CF",
+      name: "CrossFund",
+      icon: "🎉",
+      contractAddress: "quauDjvWByAgtij5eJiTgi4NuMtcbaPLd3FpWG9cyai",
+      category: "DEFI",
     }
   ];
 
@@ -1336,15 +1368,15 @@ const SigniqMarket: React.FC = () => {
             >
               <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
             </button>
-            <button className="px-6 py-2 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-lg font-semibold hover:opacity-90 transition-opacity">
+            {/* <button className="px-6 py-2 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-lg font-semibold hover:opacity-90 transition-opacity">
               CONNECT WALLET
-            </button>
-            <button 
+            </button> */}
+            {/* <button 
               onClick={() => setDarkMode(!darkMode)}
               className="p-2 rounded-full border-2 border-gray-700 hover:bg-gray-800 transition-colors"
             >
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
+            </button> */}
           </div>
         </div>
       </header>
