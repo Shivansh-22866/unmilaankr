@@ -24,6 +24,12 @@ interface ProjectConfig {
   icon: string;
   contractAddress: string;
   category: 'MEME' | 'DEFI' | 'GAMER' | 'X SCAN';
+  socialLinks?: {
+    twitter?: string;
+    website?: string;
+    telegram?: string;
+    discord?: string;
+  };
 }
 
 // Enhanced Security Interface
@@ -507,9 +513,24 @@ const ProjectDetailModal = ({ project, onClose, toggleWatchlist, isInWatchlist, 
                                                 </div>
                                             </div>
                                         </div>
+                                        {project.socialLinks?.website && (
+                                            <a href={project.socialLinks.website} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-gray-500/10 hover:bg-gray-500/20 text-gray-400 border border-gray-500/30 rounded-lg transition-colors">
+                                                Website ↗
+                                            </a>
+                                        )}
                                         {project.socialLinks?.twitter && (
                                             <a href={project.socialLinks.twitter} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg transition-colors">
                                                 Twitter ↗
+                                            </a>
+                                        )}
+                                        {project.socialLinks?.telegram && (
+                                            <a href={project.socialLinks.telegram} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg transition-colors">
+                                                Telegram ↗
+                                            </a>
+                                        )}
+                                        {project.socialLinks?.discord && (
+                                            <a href={project.socialLinks.discord} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-lg transition-colors">
+                                                Discord ↗
                                             </a>
                                         )}
                                         <a href={`https://solscan.io/token/${project.contractAddress}`} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 rounded-lg transition-colors">
@@ -752,18 +773,18 @@ const SigniqMarket: React.FC = () => {
 
   // FULL PROJECT LIST
   const projectConfigs: ProjectConfig[] = useMemo(() => [
-    { id: 1, tick: 'CYAI', name: 'CyreneAI', icon: '🔷', contractAddress: '6Tph3SxbAW12BSJdCevVV9Zujh97X69d5MJ4XjwKmray', category: 'DEFI' },
-    { id: 2, tick: 'SGQ', name: "Signiq", icon: "🌀", contractAddress: "K9uxt28GvfPsQuapLU1rYxY1REAcZ9NMQ3SYwWbcyai", category: "X SCAN" },
-    { id: 3, tick: 'CT', name: "CromaFun", icon: "🎉", contractAddress: 'QGA9gSriVnubWRU21Ph5roaGdxFwdpSRT6hmjwycyai', category: "GAMER" },
-    { id: 4, tick: "SENT", name: "Sentinel AI", icon: "🤖", contractAddress: "r6j6eBMX3WFpDP6iBCaMUW2AXJbBDN4rQquiFPfcyai", category: "DEFI" },
-    { id: 5, tick: "MICK", name: "Mikayla", icon: "🐶", contractAddress: "QCDgZ9RDarrnDq57GiSxPyWeJ3PKJndfMcHYkMWcyai", category: "MEME" },
-    { id: 6, tick: "AS", name: "Aytes", icon: "⚡", contractAddress: 'VsnkRuJmAfymCs8kctHEa4kL3Tvjvg3p21QES1ucyai', category: "DEFI" },
-    { id: 7, tick: "MDS", name: "Medusa Shards", icon: "🗿", contractAddress: "Dria68ScNfmRrvL7K1nx5cEkND6V6V5yUGkFr7gcyai", category: "GAMER" },
-    { id: 8, tick: "PRN", name: "Prana Chain", icon: "🧬", contractAddress: "C15AhpLTjjVBLLPq5xqH9ewXscSN4DcpkePmHg7geTa6", category: "DEFI" },
-    { id: 9, tick: "SCRIPT", name: "Scriptonia", icon: "📜", contractAddress: "C15AhpLTjjVBLLPq5xqH9ewXscSN4DcpkePmHg7geTa6", category: "X SCAN" },
-    { id: 10, tick: "SWARM", name: "Swarm", icon: "🐝", contractAddress: "otgodXJDJFFip57AA43ERfDs8pcGviDd9oUJsnEcyai", category: "X SCAN" },
-    { id: 11, tick: "AIDP", name: "AIdp.Store", icon: "🏪", contractAddress: "PLNk8NUTBeptajEX9GzZrxsYPJ1psnw62dPnWkGcyai", category: "DEFI" },
-    { id: 12, tick: "CF", name: "CrossFund", icon: "✝️", contractAddress: "quauDjvWByAgtij5eJiTgi4NuMtcbaPLd3FpWG9cyai", category: "DEFI" }
+    { id: 1, tick: 'CYAI', name: 'CyreneAI', icon: '🔷', contractAddress: '6Tph3SxbAW12BSJdCevVV9Zujh97X69d5MJ4XjwKmray', category: 'DEFI', socialLinks: { twitter: 'https://x.com/cyreneai', website: 'https://cyreneai.com' } },
+    { id: 2, tick: 'SGQ', name: "Signiq", icon: "🌀", contractAddress: "K9uxt28GvfPsQuapLU1rYxY1REAcZ9NMQ3SYwWbcyai", category: "X SCAN", socialLinks: { twitter: "https://x.com/signiq", website: "https://signiq.xyz", telegram: "https://t.co/07EAGFf72I"} },
+    { id: 3, tick: 'CT', name: "CromaFun", icon: "🎉", contractAddress: 'QGA9gSriVnubWRU21Ph5roaGdxFwdpSRT6hmjwycyai', category: "GAMER", socialLinks: {twitter: "https://x.com/cromafun", website: "https://t.co/UYJuDVRELJ", telegram: "https://t.co/cyAojjZvIA"} },
+    { id: 4, tick: "U1", name: "Umbrae", icon: "🤖", contractAddress: "kedoobK2qe2f1V8ee5vDXFr3H7gKnhQVNJXA3Ltcyai", category: "DEFI", socialLinks: {website: "https://www.umbrae.io/", twitter: "https://x.com/Umbrae_Ignis"} },
+    { id: 5, tick: "MICK", name: "Mikayla", icon: "🐶", contractAddress: "QCDgZ9RDarrnDq57GiSxPyWeJ3PKJndfMcHYkMWcyai", category: "MEME", socialLinks: {twitter: "https://x.com/mikaylafun", website: "https://mikayla.fun"} },
+    { id: 6, tick: "AS", name: "Aytes", icon: "⚡", contractAddress: 'VsnkRuJmAfymCs8kctHEa4kL3Tvjvg3p21QES1ucyai', category: "DEFI", socialLinks: {twitter: "https://x.com/aytes_xyz", website: "https://aytes.xyz", telegram: "https://t.co/3pI3ln8QuL"} },
+    { id: 7, tick: "MDS", name: "Medusa Shards", icon: "🗿", contractAddress: "Dria68ScNfmRrvL7K1nx5cEkND6V6V5yUGkFr7gcyai", category: "GAMER", socialLinks: {twitter: "https://x.com/SenkusElixir", website: "https://www.senkuselixir.xyz/"} },
+    { id: 8, tick: "PRN", name: "Prana Chain", icon: "🧬", contractAddress: "C15AhpLTjjVBLLPq5xqH9ewXscSN4DcpkePmHg7geTa6", category: "DEFI", socialLinks: {twitter: "https://x.com/pranachain", website: "https://app.pranachain.com/", } },
+    { id: 9, tick: "SCRIPT", name: "Scriptonia", icon: "📜", contractAddress: "C15AhpLTjjVBLLPq5xqH9ewXscSN4DcpkePmHg7geTa6", category: "X SCAN", socialLinks: {twitter: "https://x.com/Scriptonia_xyz", website: "www.scriptonia.xyz", telegram: "http://t.me/Scriptonia_xyz"} },
+    { id: 10, tick: "SWARM", name: "Swarm", icon: "🐝", contractAddress: "otgodXJDJFFip57AA43ERfDs8pcGviDd9oUJsnEcyai", category: "X SCAN", socialLinks: {twitter: "https://x.com/neurolov", website: "http://neurolov.ai/", } },
+    { id: 11, tick: "AIDP", name: "AIdp.Store", icon: "🏪", contractAddress: "PLNk8NUTBeptajEX9GzZrxsYPJ1psnw62dPnWkGcyai", category: "DEFI", socialLinks: {twitter: "https://x.com/aidpstore", website: "https://www.aidp.store", telegram: "https://t.me/Aidpofficial"} },
+    { id: 12, tick: "CF", name: "CrossFund", icon: "✝️", contractAddress: "quauDjvWByAgtij5eJiTgi4NuMtcbaPLd3FpWG9cyai", category: "DEFI", socialLinks: {twitter: "https://x.com/crossfundxyz", website: "https://crossfund.xyz/", telegram: "https://t.co/LAHPtK5xgc"} }
   ], []);
 
   // Persistence
