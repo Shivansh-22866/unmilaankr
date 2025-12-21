@@ -444,7 +444,7 @@ const ProjectDetailModal = ({ project, onClose, toggleWatchlist, isInWatchlist, 
         {project.aiInsight?.signal}
         </span>
         </div>
-        <p className="text-sm text-gray-300 italic mb-3">"{project.aiInsight?.summary}"</p>
+        <p className="text-sm text-gray-300 italic mb-3">&quot;{project.aiInsight?.summary}&quot;</p>
         <div className="flex items-center gap-2 text-xs text-gray-500">
         <span>Confidence: {Math.min(project.aiInsight?.confidence, 90)}%</span>
         <div className="flex-1 h-1 bg-gray-700 rounded-full"><div style={{width: `${Math.min(project.aiInsight?.confidence, 90)}%`}} className="h-full bg-purple-500 rounded-full"/></div>
